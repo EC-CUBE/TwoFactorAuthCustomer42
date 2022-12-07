@@ -1,0 +1,50 @@
+admin.setting.shop.shop.customer_two_factor_is_activate_sms: SMSによる本人認証
+admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip: 会員登録時、メール認証に加え携帯電話による本人認証を実施します
+admin.setting.shop.shop.customer_two_factor_auth: 2段階認証機能
+admin.setting.shop.shop.customer_two_factor_auth_tooltip: ログイン時、通常(メールアドレス・パスワード)認証に加え、SMSまたは認証アプリによる二段階認証を実施します。
+admin.setting.shop.shop.customer_two_factor_auth_type: 2段階認証方法
+admin.setting.shop.shop.customer_two_factor_auth_type_tooltip: SMS/アプリ認証
+
+admin.setting.2fa.sms.title : SMS送信設定
+admin.setting.2fa.sms.sub_title : SMS送信設定(Twilio)
+admin.setting.2fa.sms.sid : SID
+admin.setting.2fa.sms.api_token : APIトークン
+admin.setting.2fa.sms.from_phone_number : 送信元電話番号
+
+front.2fa.entry.complete_title: 本人確認を実施してください
+front.2fa.entry.complete_message__title: メール認証ありがとうございます。
+front.2fa.entry.complete_message__activated: |
+  続いて携帯電話によるご本人様確認をお願いいたします。
+  ご本人様確認を頂けない場合、当ショップはご利用できません。
+front.2fa.entry.go_to_auth: 本人確認へ
+
+front.2fa.device_auth.title: 本人確認
+front.2fa.device_auth.send.message: |
+  携帯電話に認証コードを送信します。
+  お手持ちの携帯電話番号を入力してください。
+front.2fa.device_auth.input.message: |
+  携帯電話に送信された認証コードを入力してください。
+  送信されていない場合は「認証コードを再送信」をクリックしてください。
+
+front.2fa.title: 2段階認証
+front.2fa.sms.send.message: |
+  携帯電話に認証コードを送信します。
+  お手持ちの携帯電話番号を入力してください。
+front.2fa.sms.input.message: |
+  携帯電話に送信された認証コードを入力してください。
+  送信されていない場合は「認証コードを再送信」をクリックしてください。
+
+front.2fa.complete_message: 2段階認証の設定が完了しました。
+front.2fa.invalid_message__reinput : 2段階認証の設定に失敗しました。再度入力してください。
+front.2fa.configured_warning : 2段階認証は既に設定されています。
+
+front.2fa.type: 2段階認証方式
+front.2fa.type_message: |
+  2段階認証方式を選択してください。
+front.2fa.sms.send: 認証コードを送信
+front.2fa.sms.resend: 認証コードを再送信
+front.2fa.auth: 認証
+front.2fa.setting: 設定
+front.2fa.onetime.invalid_message__reinput : 認証に失敗しました。正しい認証コードを入力してください。
+front.2fa.sms.send.failure_message : 認証コードが送信できませんでした。正しい電話番号を入力してください。
+front.2fa.app.message: 2段階認証用スマートフォンアプリに表示されている6桁の数字を入力してください。
