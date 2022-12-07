@@ -1,0 +1,83 @@
+{#
+This file is part of EC-CUBE
+
+Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+
+http://www.ec-cube.co.jp/
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+#}
+{% extends 'default_frame.twig' %}
+
+{% set body_class = 'mypage' %}
+
+{% block javascript %}
+{# TODO: フロント側バンドルにもqrcodeが欲しい #}
+<script src="{{ asset('admin.bundle.js', 'bundle') }}"></script>
+<script>
+    $(function () {
+    $("#qrcode").qrcode({
+        size: 200,
+        fill: '#000',
+        text: 'otpauth://totp/{{ 'EC-CUBE:'|url_encode }}{{ BaseInfo.shop_name|url_encode }}{{ ' - '|url_encode }}{{ Customer.name01|url_encode }}?secret={{ auth_key }}&issuer={{ 'EC-CUBE'|url_encode }}',
+        radius: 0,
+        quiet: 0,
+        mode: 0, // 0: normal , 1: label strip , 2: label box , 3: image strip , 4: image box
+        mSize: 0.1,
+        mPosX: 0.5,
+        mPosY: 0.5,
+        label: 'no label',
+        fontname: 'sans',
+        fontcolor: '#000',
+        image: null
+    });
+});
+</script>
+{% endblock %}
+
+{% block main %}
+    <style>
+        #qrcode canvas { width: 150px; }
+    </style>
+
+    <div class="ec-role">
+        <div class="ec-pageHeader">
+            <h1>{{ 'front.2fa.title'|trans }}</h1>
+        </div>
+        <div class="ec-off2Grid">
+            <div class="ec-off2Grid__cell">
+                <form name="form1" id="form1" method="post" action="{{ path('plg_customer_2fa_app_create') }}">
+                    {{ form_widget(form._token) }}
+                    {{ form_widget(form.auth_key) }}
+
+                    {% if app.session.flashBag.has('eccube.login.target.path') %}
+                        {% for targetPath in app.session.flashBag.peek('eccube.login.target.path') %}
+                            <input type="hidden" name="_target_path" value="{{ targetPath }}" />
+                        {% endfor %}
+                    {% endif %}
+                    <div class="ec-login">
+                        <div class="ec-login__icon">
+                            <div id="qrcode" class="ec-icon"></div>
+                        </div>
+                        <p>{{ 'tooltip.setting.system.two_factor_auth.qr_code'|trans }}</p>
+                        <div class="ec-login__input">
+                            <div class="ec-input">
+                                {{ form_widget(form.device_token, {'attr': {'class':'w-100','placeholder': 'admin.setting.system.two_factor_auth.device_token', 'autofocus': true}}) }}
+                            </div>
+                            {% if error %}
+                                <p class="ec-errorMessage">{{ error|nl2br }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="ec-login__input">
+                            <button type="submit"
+                                    class="ec-blockBtn--cancel">{{ 'front.2fa.auth'|trans }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
