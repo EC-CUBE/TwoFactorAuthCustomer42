@@ -4,8 +4,6 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
-use Eccube\Repository\BaseInfoRepository;
-
 
 /**
  * @EntityExtension("Eccube\Entity\Customer")
@@ -53,6 +51,13 @@ trait CustomerTrait
      * @ORM\Column(name="device_authed", type="boolean", nullable=false, options={"default":false})
      */
     private bool $device_authed = false;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="authed_phone_number", type="string", length=14, nullable=true)
+     */
+    private $authed_phone_number;
 
     /**
      * @return bool
@@ -165,16 +170,6 @@ trait CustomerTrait
     }
 
     /**
-     * Get Phone Number(for SMS)
-     * 
-     * @return string
-     */
-    public function getSmsPhoneNumber() 
-    {
-        return '+81' . $this->getPhoneNumber();
-    }
-
-    /**
      * @return bool
      */
     public function isDeviceAuthed(): bool
@@ -188,6 +183,22 @@ trait CustomerTrait
     public function setDeviceAuthed(bool $device_authed): void
     {
         $this->device_authed = $device_authed;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthedPhoneNumber(): ?string
+    {
+        return $this->authed_phone_number;
+    }
+
+    /**
+     * @param string $authed_phone_number
+     */
+    public function setAuthedPhoneNumber(string $authed_phone_number): void
+    {
+        $this->authed_phone_number = $authed_phone_number;
     }
 
 }

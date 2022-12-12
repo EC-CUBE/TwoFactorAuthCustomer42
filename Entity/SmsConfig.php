@@ -44,21 +44,21 @@ class SmsConfig extends AbstractEntity
      *
      * @ORM\Column(name="api_key", type="string", nullable=true, length=200)
      */
-    private $api_key = "ACae86d0224d3c0fbdb292bb7e6d467bcb";
+    private $api_key = null;
 
     /**
      * @var string
      *
      * @ORM\Column(name="api_secret", type="string", nullable=true, length=200)
      */
-    private $api_secret = "db93fbbc95e74c9c363043d28adf2fd3";
+    private $api_secret = null;
 
     /**
      * @var string
      *
      * @ORM\Column(name="from_tel", type="string", nullable=true, length=200)
      */
-    private $from_tel = "18563862532";
+    private $from_tel = null;
 
     /**
      * Constructor.

@@ -2,23 +2,23 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Form\Type\Admin\TwoFactorAuthType;
 use Eccube\Repository\CustomerRepository;
-use Eccube\Repository\MemberRepository;
+use Eccube\Service\TwoFactorAuthService;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthAppTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthSmsTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthPhoneNumberTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
+
 
 class TwoFactorAuthCustomerController extends AbstractController
 {
@@ -71,7 +71,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function deviceAuthSendOneTime(Request $request) 
     {
         if ($this->isDeviceAuthed()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -88,8 +87,14 @@ class TwoFactorAuthCustomerController extends AbstractController
             $form->handleRequest($request);
             $phoneNumber = $form->get('phone_number')->getData();
             if ($form->isSubmitted() && $form->isValid()) {
-                // 入力された電話番号へワンタイムコードを送信
-                $this->customerTwoFactorAuthService->sendOnetimeToken($Customer, $phoneNumber);
+                // 他のデバイスで既に認証済みの電話番号かチェック
+                if ($this->customerRepository->findBy(['authed_phone_number' => $phoneNumber]) == null) {
+                    // 認証されていない電話番号の場合
+                    // 入力電話番号へワンタイムコードを送信
+                    $this->customerTwoFactorAuthService->sendOnetimeToken($Customer, $phoneNumber);
+                    // 送信電話番号をセッションへ一時格納
+                    $this->session->set(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER, $phoneNumber);
+                }
                 $response = new RedirectResponse($this->generateUrl('plg_customer_2fa_device_auth_input_onetime'));
                 return $response;
             } else {
@@ -112,7 +117,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function deviceAuthInputOneTime(Request $request) 
     {
         if ($this->isDeviceAuthed()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -122,7 +126,6 @@ class TwoFactorAuthCustomerController extends AbstractController
         $Customer = $this->getUser();
         $builder = $this->formFactory->createBuilder(TwoFactorAuthSmsTypeCustomer::class);
         $form = null;
-        $auth_key = null;
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
@@ -133,13 +136,17 @@ class TwoFactorAuthCustomerController extends AbstractController
                     // ワンタイムトークン不一致 or 有効期限切れ
                     $error = trans('front.2fa.onetime.invalid_message__reinput');
                 } else {
+                    // 送信電話番号をセッションより取得
+                    $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
                     // ワンタイムトークン一致
                     // デバイス認証完了
                     $Customer->setDeviceAuthed(true);
-                    $Customer->setOneTimeToken(null);
+                    $Customer->setAuthedPhoneNumber($phoneNumber);
                     $Customer->setOneTimeTokenExpire(null);
                     $this->entityManager->persist($Customer);
                     $this->entityManager->flush();
+                    $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
+
                     // 会員認証完了画面表示
                     $response = new RedirectResponse($this->generateUrl('plg_customer_2fa_device_auth_complete'));
                     return $response;
@@ -177,7 +184,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSelectAuthType(Request $request) 
     {
         if ($this->isAuth()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -201,6 +207,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                 $Customer->setTwoFactorAuth(true);
                 $this->entityManager->persist($Customer);
                 $this->entityManager->flush();
+
                 // 初回認証を実施
                 return $this->redirectToRoute('mypage');
             } else {
@@ -223,7 +230,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSmsSendOneTime(Request $request) 
     {
         if ($this->isAuth()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -264,7 +270,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSmsInputOneTime(Request $request) 
     {
         if ($this->isAuth()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -286,13 +291,14 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $error = trans('front.2fa.onetime.invalid_message__reinput');
                 } else {
                     // ワンタイムトークン一致
+                    // 二段階認証完了
                     $Customer->setTwoFactorAuth(true);
                     $Customer->setOneTimeToken(null);
                     $Customer->setOneTimeTokenExpire(null);
                     $this->entityManager->persist($Customer);
                     $this->entityManager->flush();
 
-                    $response = new RedirectResponse($this->generateUrl('mypage'));
+                    $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
                     $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
                     return $response;
                 }
@@ -316,7 +322,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaAppcreate(Request $request) 
     {
         if ($this->isAuth()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -347,8 +352,8 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $this->entityManager->persist($Customer);
                     $this->entityManager->flush();
                     $this->addSuccess('front.2fa.complete_message');
-                    // TODO: リダイレクト先の汎用化
-                    $response = new RedirectResponse($this->generateUrl('mypage'));
+
+                    $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
                     $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
                     return $response;
                 } else {
@@ -375,7 +380,6 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaAppchallenge(Request $request) 
     {
         if ($this->isAuth()) {
-            // TODO: リダイレクト先の汎用化
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -392,8 +396,7 @@ class TwoFactorAuthCustomerController extends AbstractController
             if ($form->isSubmitted() && $form->isValid()) {
                 if ($Customer->getTwoFactorAuthSecret()) {
                     if ($this->customerTwoFactorAuthService->verifyCode($Customer->getTwoFactorAuthSecret(), $form->get('device_token')->getData())) {
-                        // TODO: リダイレクト先の汎用化
-                        $response = new RedirectResponse($this->generateUrl('mypage'));
+                        $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
                         $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
                         return $response;
                     } else {
@@ -441,5 +444,15 @@ class TwoFactorAuthCustomerController extends AbstractController
             return true;
         }
         return false;
+    }
+
+    /**
+     * コールバックルートの取得.
+     * @return string
+     */
+    private function getCallbackRoute():string
+    {
+        $route = $this->session->get(CustomerTwoFactorAuthService::SESSION_CALL_BACK_URL);
+        return ($route != null) ? $route : 'mypage';
     }
 }

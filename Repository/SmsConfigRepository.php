@@ -13,11 +13,9 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Repository;
 
-use Eccube\Common\Constant;
 use Eccube\Repository\AbstractRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Plugin\TwoFactorAuthCustomer42\Entity\SmsConfig;
-use Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository;
 
 /**
  * SmsConfigRepository.

@@ -17,15 +17,10 @@ use Psr\Container\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
 use Eccube\Repository\BaseInfoRepository;
-use Eccube\Service\Eccube;
-use Eccube\Service\Encoder;
 use RobThree\Auth\TwoFactorAuth;
 use Symfony\Component\HttpFoundation\Cookie;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
-use Plugin\TwoFactorAuthCustomer42\Entity\SmsConfig;
 use Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository;
 
 class CustomerTwoFactorAuthService
@@ -49,6 +44,16 @@ class CustomerTwoFactorAuthService
      * @var string Cookieに保存する時のキー名
      */
     public const DEFAULT_COOKIE_NAME = 'plugin_eccube_customer_2fa';
+
+    /**
+     * @var string 認証電話番号を保存する時のキー名
+     */
+    public const SESSION_AUTHED_PHONE_NUMBER = 'plugin_eccube_customer_2fa_authed_phone_number';
+
+    /**
+     * @var string コールバックURL
+     */
+    public const SESSION_CALL_BACK_URL = 'plugin_eccube_customer_2fa_call_back_url';
 
     /**
      * @var EntityManagerInterface

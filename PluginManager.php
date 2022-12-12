@@ -181,8 +181,16 @@ class PluginManager extends AbstractPluginManager
         }
         // 初期値を保存
         $SmsConfig = new SmsConfig();
+
+        // TODO:削除
+        $SmsConfig
+            ->setApiKey("ACae86d0224d3c0fbdb292bb7e6d467bcb")
+            ->setApiSecret("db93fbbc95e74c9c363043d28adf2fd3")
+            ->setFromTel("18563862532")
+        ;
+
         $em->persist($SmsConfig);
-        $em->flush($SmsConfig);
+        $em->flush();
 
         return $SmsConfig;
     }    

@@ -17,17 +17,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
 use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Entity\Customer;
-use Eccube\Entity\Member;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Request\Context;
 use Eccube\Service\TwoFactorAuthService;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 {
@@ -80,14 +80,24 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $router;
 
     /**
-     * @var TwoFactorAuthService
+     * @var CustomerTwoFactorAuthService
      */
     protected $customerTwoFactorAuthService;
+
+    /**
+     * @var BaseInfoRepository
+     */
     protected BaseInfoRepository $baseInfoRepository;
+
     /**
      * @var \Eccube\Entity\BaseInfo|object|null
      */
     protected $baseInfo;
+
+    /**
+     * @var Session
+     */
+    protected $session;
 
     /**
      * @param EntityManagerInterface $entityManager
@@ -96,6 +106,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param UrlGeneratorInterface $router
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService
      * @param BaseInfoRepository $baseInfoRepository
+     * @param SessionInterface $session
      */
     public function __construct(
         EntityManagerInterface       $entityManager, 
@@ -103,7 +114,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         Context                      $requestContext,
         UrlGeneratorInterface        $router,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        BaseInfoRepository           $baseInfoRepository
+        BaseInfoRepository           $baseInfoRepository,
+        SessionInterface             $session
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -112,6 +124,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->baseInfoRepository = $baseInfoRepository;
         $this->baseInfo = $this->baseInfoRepository->find(1);
+        $this->session = $session;
     }
 
     /**
@@ -158,6 +171,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                     // [会員] ログイン済み
                     if (!$Customer->isTwoFactorAuth()) {
                         // [会員] 2段階認証が未設定の場合
+                        // コールバックURLをセッションへ設定
+                        $this->setCallbackRoute($route);
                         // 2段階認証選択画面へリダイレクト
                         $url = $this->router->generate('plg_customer_2fa_auth_type_select', [], UrlGeneratorInterface::ABSOLUTE_PATH);
                         $event->setController(function () use ($url) {
@@ -168,6 +183,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                         if (!$this->customerTwoFactorAuthService->isAuth($Customer)) {
                             // 2段階認証 - 未認証の場合
                             if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_APP) {
+                                // コールバックURLをセッションへ設定
+                                $this->setCallbackRoute($route);
                                 // 2段階認証方式 = アプリ認証
                                 if ($Customer->getTwoFactorAuthSecret()) {
                                     // 秘密鍵あり = 認証
@@ -182,6 +199,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                             }
 
                             if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_SMS) {
+                                // コールバックURLをセッションへ設定
+                                $this->setCallbackRoute($route);
                                 // 2段階認証方式 = SMS認証
                                 $url = $this->router->generate('plg_customer_2fa_sms_send_onetime', [], UrlGeneratorInterface::ABSOLUTE_PATH);
                                 $event->setController(function () use ($url) {
@@ -190,7 +209,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                             }
                         }
                     }
-
                 }
             }
         }
@@ -203,7 +221,15 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     {
         return [
             KernelEvents::CONTROLLER_ARGUMENTS => ['onKernelController', 7],
-
         ];
+    }
+
+    /**
+     * コールバックルートをセッションへ設定.
+     * @param string $route
+     */
+    private function setCallbackRoute(string $route)
+    {
+        $this->session->set(CustomerTwoFactorAuthService::SESSION_CALL_BACK_URL, $route);
     }
 }
