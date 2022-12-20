@@ -15,8 +15,8 @@ namespace Plugin\TwoFactorAuthCustomer42\Controller\Admin;
 
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Controller\AbstractController;
-use Plugin\TwoFactorAuthCustomer42\Form\Type\SmsConfigType;
-use Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository;
+use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthConfigType;
+use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,15 +32,15 @@ class ConfigController extends AbstractController
     protected $baseInfoRepository;
 
     /**
-     * @var SmsConfigRepository
+     * @var TwoFactorAuthConfigRepository
      */
     private $smsConfigRepository;
 
     /**
-     * SmsConfigController constructor.
+     * ConfigController constructor.
      *
      */
-    public function __construct(BaseInfoRepository $baseInfoRepository, SmsConfigRepository $smsConfigRepository)
+    public function __construct(BaseInfoRepository $baseInfoRepository, TwoFactorAuthConfigRepository $smsConfigRepository)
     {
         $this->baseInfoRepository = $baseInfoRepository;
         $this->smsConfigRepository = $smsConfigRepository;
@@ -58,7 +58,7 @@ class ConfigController extends AbstractController
     {
         // 設定情報、フォーム情報を取得
         $SmsConfig = $this->smsConfigRepository->findOne();
-        $form = $this->createForm(SmsConfigType::class, $SmsConfig);
+        $form = $this->createForm(TwoFactorAuthConfigType::class, $SmsConfig);
         $form->handleRequest($request);
 
         // 設定画面で登録ボタンが押されたらこの処理を行う

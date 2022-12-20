@@ -23,7 +23,7 @@ use Eccube\Repository\PageLayoutRepository;
 use Eccube\Repository\PageRepository;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Plugin\TwoFactorAuthCustomer42\Entity\SmsConfig;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 
 /**
  * Class PluginManager.
@@ -175,24 +175,14 @@ class PluginManager extends AbstractPluginManager
      */
     protected function createConfig(EntityManagerInterface $em)
     {
-        $SmsConfig = $em->find(SmsConfig::class, 1);
-        if ($SmsConfig) {
-            return $SmsConfig;
+        $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
+        if ($TwoFactorAuthConfig) {
+            return $TwoFactorAuthConfig;
         }
         // 初期値を保存
-        $SmsConfig = new SmsConfig();
+        $TwoFactorAuthConfig = new TwoFactorAuthConfig();
 
-        // TODO:削除
-        $SmsConfig
-            ->setApiKey("ACae86d0224d3c0fbdb292bb7e6d467bcb")
-            ->setApiSecret("db93fbbc95e74c9c363043d28adf2fd3")
-            ->setFromTel("18563862532")
-        ;
-
-        $em->persist($SmsConfig);
-        $em->flush();
-
-        return $SmsConfig;
+        return $TwoFactorAuthConfig;
     }    
 
 }

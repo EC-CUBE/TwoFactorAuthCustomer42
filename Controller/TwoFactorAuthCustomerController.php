@@ -6,7 +6,6 @@ use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Form\Type\Admin\TwoFactorAuthType;
 use Eccube\Repository\CustomerRepository;
-use Eccube\Service\TwoFactorAuthService;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthAppTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthSmsTypeCustomer;
@@ -94,6 +93,8 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $this->customerTwoFactorAuthService->sendOnetimeToken($Customer, $phoneNumber);
                     // 送信電話番号をセッションへ一時格納
                     $this->session->set(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER, $phoneNumber);
+                } else {
+                    log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                 }
                 $response = new RedirectResponse($this->generateUrl('plg_customer_2fa_device_auth_input_onetime'));
                 return $response;
@@ -184,8 +185,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSelectAuthType(Request $request) 
     {
         if ($this->isAuth()) {
-            // 認証済みならばマイページへ
-            return $this->redirectToRoute('mypage');
+            return $this->redirectToRoute($this->getCallbackRoute());
         }
 
         $error = null;
@@ -230,8 +230,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSmsSendOneTime(Request $request) 
     {
         if ($this->isAuth()) {
-            // 認証済みならばマイページへ
-            return $this->redirectToRoute('mypage');
+            return $this->redirectToRoute($this->getCallbackRoute());
         }
 
         $error = null;
@@ -270,8 +269,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaSmsInputOneTime(Request $request) 
     {
         if ($this->isAuth()) {
-            // 認証済みならばマイページへ
-            return $this->redirectToRoute('mypage');
+            return $this->redirectToRoute($this->getCallbackRoute());
         }
 
         $error = null;
@@ -299,7 +297,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $this->entityManager->flush();
 
                     $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
-                    $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
+                    $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer, $this->getCallbackRoute()));
                     return $response;
                 }
             } else {
@@ -322,8 +320,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaAppcreate(Request $request) 
     {
         if ($this->isAuth()) {
-            // 認証済みならばマイページへ
-            return $this->redirectToRoute('mypage');
+            return $this->redirectToRoute($this->getCallbackRoute());
         }
 
         $error = null;
@@ -354,7 +351,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $this->addSuccess('front.2fa.complete_message');
 
                     $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
-                    $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
+                    $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer, $this->getCallbackRoute()));
                     return $response;
                 } else {
                     $error = trans('front.2fa.invalid_message__reinput');
@@ -380,8 +377,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     public function tfaAppchallenge(Request $request) 
     {
         if ($this->isAuth()) {
-            // 認証済みならばマイページへ
-            return $this->redirectToRoute('mypage');
+            return $this->redirectToRoute($this->getCallbackRoute());
         }
 
         $error = null;
@@ -397,7 +393,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                 if ($Customer->getTwoFactorAuthSecret()) {
                     if ($this->customerTwoFactorAuthService->verifyCode($Customer->getTwoFactorAuthSecret(), $form->get('device_token')->getData())) {
                         $response = new RedirectResponse($this->generateUrl($this->getCallbackRoute()));
-                        $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer));
+                        $response->headers->setCookie($this->customerTwoFactorAuthService->createAuthedCookie($Customer, $this->getCallbackRoute()));
                         return $response;
                     } else {
                         $error = trans('front.2fa.invalid_message__reinput');
@@ -440,10 +436,12 @@ class TwoFactorAuthCustomerController extends AbstractController
     {
         /** @var Customer $Customer */
         $Customer = $this->getUser();
-        if ($this->customerTwoFactorAuthService->isAuth($Customer)) {
-            return true;
+        $is_login_authed = $this->customerTwoFactorAuthService->isAuth($Customer, $this->getCallbackRoute());
+
+        if (!$is_login_authed) {
+            return false;
         }
-        return false;
+        return true;
     }
 
     /**

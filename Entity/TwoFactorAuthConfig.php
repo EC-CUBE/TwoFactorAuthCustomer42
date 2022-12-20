@@ -19,16 +19,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * SmsConfig
+ * TwoFactorConfig
  *
- * @ORM\Table(name="plg_sms_config")
+ * @ORM\Table(name="plg_two_factor_auth_config")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discriminator_type", type="string", length=255)
  * @ORM\HasLifecycleCallbacks()
- * @ORM\Entity(repositoryClass="Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository")
+ * @ORM\Entity(repositoryClass="Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository")
  * @UniqueEntity("id")
  */
-class SmsConfig extends AbstractEntity
+class TwoFactorAuthConfig extends AbstractEntity
 {
     /**
      * @var int
@@ -61,6 +61,20 @@ class SmsConfig extends AbstractEntity
     private $from_tel = null;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="include_route", type="text", nullable=true)
+     */
+    private $include_route = null;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="exclude_route", type="text", nullable=true)
+     */
+    private $exclude_route = null;
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -82,7 +96,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $apiKey
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setApiKey($apiKey)
     {
@@ -106,7 +120,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $apiSecret
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setApiSecret($apiSecret)
     {
@@ -130,7 +144,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $fromTel
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setFromTel($fromTel)
     {
@@ -147,6 +161,54 @@ class SmsConfig extends AbstractEntity
     public function getFromTel()
     {
         return $this->from_tel;
+    }
+
+    /**
+     * Set exclude_route.
+     *
+     * @param string|null $exclude_route
+     *
+     * @return TwoFactorAuthConfig
+     */
+    public function setExcludeRoute($exclude_route = null)
+    {
+        $this->exclude_route = $exclude_route;
+
+        return $this;
+    }
+
+    /**
+     * Get exclude_route.
+     *
+     * @return string|null
+     */
+    public function getExcludeRoute()
+    {
+        return $this->exclude_route;
+    }
+
+    /**
+     * Set include_route.
+     *
+     * @param string|null $include_route
+     *
+     * @return TwoFactorAuthConfig
+     */
+    public function setIncludeRoute($include_route = null)
+    {
+        $this->include_route = $include_route;
+
+        return $this;
+    }
+
+    /**
+     * Get include_route.
+     *
+     * @return string|null
+     */
+    public function getIncludeRoute()
+    {
+        return $this->include_route;
     }
 
 }

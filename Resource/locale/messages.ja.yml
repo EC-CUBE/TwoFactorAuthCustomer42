@@ -5,11 +5,15 @@ admin.setting.shop.shop.customer_two_factor_auth_tooltip: ログイン時、通�
 admin.setting.shop.shop.customer_two_factor_auth_type: 2段階認証方法
 admin.setting.shop.shop.customer_two_factor_auth_type_tooltip: SMS/アプリ認証
 
-admin.setting.2fa.sms.title : SMS送信設定
+admin.setting.2fa.config.title: 2段階認証設定
 admin.setting.2fa.sms.sub_title : SMS送信設定(Twilio)
 admin.setting.2fa.sms.sid : SID
 admin.setting.2fa.sms.api_token : APIトークン
 admin.setting.2fa.sms.from_phone_number : 送信元電話番号
+
+admin.setting.2fa.route.sub_title : 認証ルーティング設定
+admin.setting.2fa.route.include : 重要操作ルーティング
+admin.setting.2fa.route.exclude : 除外ルーティング
 
 front.2fa.entry.complete_title: 本人確認を実施してください
 front.2fa.entry.complete_message__title: メール認証ありがとうございます。

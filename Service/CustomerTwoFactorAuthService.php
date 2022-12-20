@@ -21,7 +21,7 @@ use RobThree\Auth\TwoFactorAuth;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
-use Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository;
+use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 
 class CustomerTwoFactorAuthService
 {
@@ -41,9 +41,19 @@ class CustomerTwoFactorAuthService
     public const DEFAULT_EXPIRE_DATE = 14;
 
     /**
+     * @var int ルート認証の有効日数
+     */
+    public const ROUTE_EXPIRE_DATE = 1;
+
+    /**
      * @var string Cookieに保存する時のキー名
      */
     public const DEFAULT_COOKIE_NAME = 'plugin_eccube_customer_2fa';
+
+    /**
+     * @var string ルート認証Cookieに保存する時のキー名
+     */
+    public const ROUTE_COOKIE_NAME = 'plugin_eccube_route_customer_2fa';
 
     /**
      * @var string 認証電話番号を保存する時のキー名
@@ -94,11 +104,20 @@ class CustomerTwoFactorAuthService
      * @var string
      */
     protected $cookieName = self::DEFAULT_COOKIE_NAME;
+    /**
+     * @var string
+     */
+    protected $routeCookieName = self::ROUTE_COOKIE_NAME;
 
     /**
      * @var int
      */
     protected $expire = self::DEFAULT_EXPIRE_DATE;
+
+    /**
+     * @var int
+     */
+    protected $route_expire = self::ROUTE_EXPIRE_DATE;
 
     /**
      * @var TwoFactorAuth
@@ -110,9 +129,9 @@ class CustomerTwoFactorAuthService
     private $baseInfo;
 
     /**
-     * @var SmsConfig
+     * @var TwoFactorAuthConfig
      */
-    private $smsConfig;
+    private $twoFactorAuthConfig;
 
     /**
      * @var \Twig_Environment
@@ -138,7 +157,7 @@ class CustomerTwoFactorAuthService
      * @param EncoderFactoryInterface $encoderFactory
      * @param RequestStack            $requestStack
      * @param BaseInfoRepository      $baseInfoRepository
-     * @param SmsConfigRepository     $smsConfigRepository
+     * @param TwoFactorAuthConfigRepository     $smsConfigRepository
      * @param \Twig_Environment       $twig
      */
     public function __construct(
@@ -147,7 +166,7 @@ class CustomerTwoFactorAuthService
         EncoderFactoryInterface $encoderFactory,
         RequestStack            $requestStack,
         BaseInfoRepository      $baseInfoRepository,
-        SmsConfigRepository     $smsConfigRepository,
+        TwoFactorAuthConfigRepository     $smsConfigRepository,
         \Twig_Environment $twig
     ) {
         $this->entityManager = $entityManager;
@@ -158,15 +177,24 @@ class CustomerTwoFactorAuthService
         $this->encoder = $this->encoderFactory->getEncoder('Eccube\\Entity\\Customer');
         $this->tfa = new TwoFactorAuth();
         $this->baseInfo = $baseInfoRepository->find(1);
+
         if ($this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name')) {
             $this->cookieName = $this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name');
         }
-
+        if ($this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name')) {
+            $this->routeCookieName = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name');
+        }
         $expire = $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
         if ($expire || $expire === '0') {
             $this->expire = (int)$expire;
         }
-        $this->smsConfig = $smsConfigRepository->findOne();
+
+        $route_expire = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
+        if ($route_expire || $route_expire === '0') {
+            $this->route_expire = (int)$route_expire;
+        }
+
+        $this->twoFactorAuthConfig = $smsConfigRepository->findOne();
         $this->twig = $twig;
     }
 
@@ -177,12 +205,24 @@ class CustomerTwoFactorAuthService
      *
      * @return boolean
      */
-    public function isAuth($Customer)
+    public function isAuth($Customer, $route = null)
     {
         if (!$Customer->isTwoFactorAuth()) {
             return false;
         }
-        if (($json = $this->request->cookies->get($this->cookieName))) {
+
+        $cookieName = $this->cookieName;
+        $expire = $this->expire;
+        if ($route != null) {
+            if ($route == 'mypage' || $route == 'homepage' || $route == 'shopping') {
+                $cookieName = $this->cookieName;
+            } else {
+                $cookieName = $this->routeCookieName . '_' . $route;
+                $expire = $this->route_expire;
+            }
+        }
+
+        if (($json = $this->request->cookies->get($cookieName))) {
             $configs = json_decode($json);
             $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getTwoFactorAuthSecret(), $Customer->getSalt());
             if (
@@ -193,7 +233,7 @@ class CustomerTwoFactorAuthService
                 && $config->key === $encodedString
                 && (
                     $this->expire == 0
-                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $this->expire . ' day'))))
+                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $expire . ' day'))))
                 )
             ) {
                 return true;
@@ -204,18 +244,29 @@ class CustomerTwoFactorAuthService
     }
 
     /**
-     * アプリ認証用Cookie生成.
+     * 2段階認証用Cookie生成.
      * 
      * @param \Eccube\Entity\Customer $Customer
      *
      * @return Cookie
      */
-    public function createAuthedCookie($Customer)
+    public function createAuthedCookie($Customer, $route = null)
     {
         $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getTwoFactorAuthSecret(), $Customer->getSalt());
 
+        $cookieName = $this->cookieName;
+        $expire = $this->expire;
+        if ($route != null) {
+            if ($route == 'mypage' || $route == 'homepage' || $route == 'shopping') {
+                $cookieName = $this->cookieName;
+            } else {
+                $cookieName = $this->routeCookieName . '_' . $route;
+                $expire = $this->route_expire;
+            }
+        }
+
         $configs = json_decode('{}');
-        if (($json = $this->request->cookies->get($this->cookieName))) {
+        if (($json = $this->request->cookies->get($cookieName))) {
             $configs = json_decode($json);
         }
         $configs->{$Customer->getId()} = [
@@ -224,9 +275,9 @@ class CustomerTwoFactorAuthService
         ];
 
         $cookie = new Cookie(
-            $this->cookieName, // name
+            $cookieName, // name
             json_encode($configs), // value
-            ($this->expire == 0 ? 0 : time() + ($this->expire * 24 * 60 * 60)), // expire
+            ($expire == 0 ? 0 : time() + ($expire * 24 * 60 * 60)), // expire
             $this->request->getBasePath(), // path
             null, // domain
             ($this->eccubeConfig->get('eccube_force_ssl') ? true : false), // secure
@@ -320,17 +371,49 @@ class CustomerTwoFactorAuthService
     {
         // TODO : https://symfony.com/doc/current/notifier.html でまとめたい
         // Twilio
-        $twilio = new \Twilio\Rest\Client($this->smsConfig->getApiKey(), $this->smsConfig->getApiSecret()); 
+        $twilio = new \Twilio\Rest\Client(
+            $this->twoFactorAuthConfig->getApiKey(), 
+            $this->twoFactorAuthConfig->getApiSecret()
+        ); 
         // SMS送信
         $message = $twilio->messages 
                     ->create('+81' . $phoneNumber,
                         array(
-                            "from" => $this->smsConfig->getFromTel(),
+                            "from" => $this->twoFactorAuthConfig->getFromTel(),
                             "body" => $body
                         ) 
                     );
 
         return $message;
+    }
+
+    /**
+     * 要認証ルートを取得.
+     * @return array
+     */
+    public function getIncludeRoutes() : array
+    {
+        $routes = [];
+        $include = $this->twoFactorAuthConfig->getIncludeRoute();
+        if ($include) {
+            $routes = preg_split('/\R/', $include);
+        }
+        return $routes;
+    }
+
+    /**
+     * 認証除外ルートを取得.
+     * 
+     * @return array
+     */
+    public function getExcludeRoutes() : array
+    {
+        $routes = [];
+        $include = $this->twoFactorAuthConfig->getExcludeRoute();
+        if ($include) {
+            $routes = preg_split('/\R/', $include);
+        }
+        return $routes;
     }
 }
 

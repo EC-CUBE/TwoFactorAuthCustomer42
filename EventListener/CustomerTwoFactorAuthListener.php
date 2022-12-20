@@ -31,11 +31,12 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 {
+
     /**
-     * @var array 2段階認証のチェックを除外するroute
-     * TODO: 除外ルートを入れるか？必要ルートを入れるか？
+     * 2段階認証で利用するルート.
+     * @var array
      */
-    public const ROUTE_EXCLUDE = [
+    public const TFA_ROUTE = [
         'plg_customer_2fa_device_auth_send_onetime',
         'plg_customer_2fa_device_auth_input_onetime',
         'plg_customer_2fa_device_auth_complete',
@@ -100,6 +101,16 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $session;
 
     /**
+     * 除外ルート.
+     */
+    protected $exclude_routes;
+
+    /**
+     * 個別認証ルート.
+     */
+    protected $include_routes;
+
+    /**
      * @param EntityManagerInterface $entityManager
      * @param EccubeConfig $eccubeConfig
      * @param Context $requestContext
@@ -125,6 +136,9 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->baseInfoRepository = $baseInfoRepository;
         $this->baseInfo = $this->baseInfoRepository->find(1);
         $this->session = $session;
+
+        $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
+        $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
     }
 
     /**
@@ -149,15 +163,23 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         }
 
         $route = $event->getRequest()->attributes->get('_route');
-        if (in_array($route, self::ROUTE_EXCLUDE)) {
-            // 除外ルーティングに当たる場合は処理なし
+        $uri = $event->getRequest()->getRequestUri();
+
+        if ($this->isExcludeRoute($route, $uri)) {
+            // 2段階認証除外ルート or URIの場合は処理なし
             return;
         }
 
         $Customer = $this->requestContext->getCurrentUser();
 
         if ($Customer && $Customer instanceof Customer) {
-            if ($Customer->getStatus()->getId() == CustomerStatus::ACTIVE && !$Customer->isDeviceAuthed()) {
+
+            if ($Customer->getStatus()->getId() !== CustomerStatus::ACTIVE) {
+                // 未ログインの場合、処理なし
+                return;
+            }
+
+            if (!$Customer->isDeviceAuthed()) {
                 // デバイス認証されていない場合
                 if ($this->baseInfo->isOptionActivateSms() && $this->baseInfo->isOptionCustomerActivate()) {
                     // 仮会員登録機能:有効 / SMSによる本人認証:有効の場合　デバイス認証画面へリダイレクト
@@ -168,50 +190,28 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                 }
             } else {
                 if ($this->baseInfo->isTwoFactorAuthUse()) {
-                    // [会員] ログイン済み
-                    if (!$Customer->isTwoFactorAuth()) {
-                        // [会員] 2段階認証が未設定の場合
-                        // コールバックURLをセッションへ設定
-                        $this->setCallbackRoute($route);
-                        // 2段階認証選択画面へリダイレクト
-                        $url = $this->router->generate('plg_customer_2fa_auth_type_select', [], UrlGeneratorInterface::ABSOLUTE_PATH);
-                        $event->setController(function () use ($url) {
-                            return new RedirectResponse($url, $status = 302);
-                        });
-                    } else {
-                        // [会員] 2段階認証が設定済みの場合
-                        if (!$this->customerTwoFactorAuthService->isAuth($Customer)) {
-                            // 2段階認証 - 未認証の場合
-                            if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_APP) {
-                                // コールバックURLをセッションへ設定
-                                $this->setCallbackRoute($route);
-                                // 2段階認証方式 = アプリ認証
-                                if ($Customer->getTwoFactorAuthSecret()) {
-                                    // 秘密鍵あり = 認証
-                                    $url = $this->router->generate('plg_customer_2fa_app_challenge', [], UrlGeneratorInterface::ABSOLUTE_PATH);
-                                } else {
-                                    // 秘密鍵なし = 秘密鍵作成
-                                    $url = $this->router->generate('plg_customer_2fa_app_create', [], UrlGeneratorInterface::ABSOLUTE_PATH);
-                                }
-                                $event->setController(function () use ($url) {
-                                    return new RedirectResponse($url, $status = 302);
-                                });
-                            }
+                    // [会員] ログイン時2段階認証状態
+                    $is_login_authed = $this->customerTwoFactorAuthService->isAuth($Customer);
+                    // [会員] ルート2段階認証状態
+                    $is_route_authed = $this->customerTwoFactorAuthService->isAuth($Customer, $route);
 
-                            if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_SMS) {
-                                // コールバックURLをセッションへ設定
-                                $this->setCallbackRoute($route);
-                                // 2段階認証方式 = SMS認証
-                                $url = $this->router->generate('plg_customer_2fa_sms_send_onetime', [], UrlGeneratorInterface::ABSOLUTE_PATH);
-                                $event->setController(function () use ($url) {
-                                    return new RedirectResponse($url, $status = 302);
-                                });
-                            }
+                    if (!$is_login_authed) {
+                        // TODO: ログインされていれば TOP/商品一覧/お問い合わせなど問わず必ず2段階認証を強制する？
+                        // ログイン後の2段階認証未実施の場合
+                        log_info('[ログイン時 2段階認証] 実施');
+                        $this->dispatch($event, $Customer, $route);
+                    } else if (!$is_route_authed) {
+                        // 重要操作ルート/URIの場合、ログイン2段階認証されていても個別で認証
+                        if ($this->isIncludeRoute($route, $uri)) {
+                            log_info('[重要操作前 2段階認証] 実施 ルート：%s URI:%s', [$route, $uri]);
+                            $this->dispatch($event, $Customer, $route);
                         }
                     }
                 }
             }
         }
+
+        return;
     }
 
     /**
@@ -225,11 +225,118 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     }
 
     /**
-     * コールバックルートをセッションへ設定.
-     * @param string $route
+     * 2段階認証のディスパッチ.
+     * 
+     * @param ControllerArgumentsEvent $event
+     * @param Customer $Customer
+     * @param string|null $route
      */
-    private function setCallbackRoute(string $route)
+    private function dispatch(ControllerArgumentsEvent $event, Customer $Customer, ?string $route)
     {
-        $this->session->set(CustomerTwoFactorAuthService::SESSION_CALL_BACK_URL, $route);
+        // ログイン認証 = まだ または ルート認証要 + ルート認証まだの場合
+        if (!$Customer->isTwoFactorAuth()) {
+            // [会員] 2段階認証が未設定の場合
+            // コールバックURLをセッションへ設定
+            $this->setCallbackRoute($route);
+            // 2段階認証選択画面へリダイレクト
+            $url = $this->router->generate('plg_customer_2fa_auth_type_select', [], UrlGeneratorInterface::ABSOLUTE_PATH);
+            $event->setController(function () use ($url) {
+                return new RedirectResponse($url, 302);
+            });
+        } else {
+            // 2段階認証 - 未認証の場合
+            if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_APP) {
+                // コールバックURLをセッションへ設定
+                $this->setCallbackRoute($route);
+                // 2段階認証方式 = アプリ認証
+                if (!empty($Customer->getTwoFactorAuthSecret())) {
+                    // 秘密鍵あり = 認証
+                    $url = $this->router->generate('plg_customer_2fa_app_challenge', [], UrlGeneratorInterface::ABSOLUTE_PATH);
+                } else {
+                    // 秘密鍵なし = 秘密鍵作成
+                    $url = $this->router->generate('plg_customer_2fa_app_create', [], UrlGeneratorInterface::ABSOLUTE_PATH);
+                }
+                $event->setController(function () use ($url) {
+                    return new RedirectResponse($url, 302);
+                });
+            }
+
+            if ($Customer->getTwoFactorAuthType() == self::AUTH_TYPE_SMS) {
+                // コールバックURLをセッションへ設定
+                $this->setCallbackRoute($route);
+                // 2段階認証方式 = SMS認証
+                $url = $this->router->generate('plg_customer_2fa_sms_send_onetime', [], UrlGeneratorInterface::ABSOLUTE_PATH);
+                $event->setController(function () use ($url) {
+                    return new RedirectResponse($url, 302);
+                });
+            }
+        }
+
+        return;
+    }
+
+
+    /**
+     * コールバックルートをセッションへ設定.
+     * @param string|null $route
+     */
+    private function setCallbackRoute(?string $route)
+    {
+        if ($route) {
+            $this->session->set(CustomerTwoFactorAuthService::SESSION_CALL_BACK_URL, $route);
+        }
+    }
+
+    /**
+     * ルート・URIが認証除外かチェック.
+     * 
+     * @param string $route
+     * @param string $uri
+     * @return bool
+     */
+    private function isExcludeRoute(string $route, string $uri): bool
+    {
+        if (in_array($route, self::TFA_ROUTE)) {
+            // 2段階認証関連ルーティングに当たる場合は処理なし
+            return true;
+        }
+
+        if (in_array($route, $this->exclude_routes)) {
+            // 除外ルートに当たる場合は処理なし
+            return true;
+        }
+
+        foreach($this->exclude_routes as $r) {
+            if (strpos($uri, $r) === 0) {
+                // 除外URLに当たる場合は処理なし
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * ルート・URIが個別認証対象かチェック.
+     *  
+     * @param string $route
+     * @param string $uri
+     * @return bool
+     */
+    private function isIncludeRoute(string $route, string $uri): bool
+    {
+        // ルートで認証
+        if (in_array($route, $this->include_routes)) {
+            return true;
+        }
+
+        // URIで認証
+        foreach($this->include_routes as $r) {
+            if (strpos($uri, $r) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
