@@ -27,7 +27,7 @@ class TwoFactorAuthSmsTypeCustomer extends AbstractType
     {
         $builder
             ->add(
-                'device_token', TextType::class, [
+                'one_time_token', TextType::class, [
                 'label' => 'front.setting.system.two_factor_auth.one_time_token',
                 'required' => true,
                 'constraints' => [

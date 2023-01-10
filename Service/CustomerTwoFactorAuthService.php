@@ -26,16 +26,6 @@ use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 class CustomerTwoFactorAuthService
 {
     /**
-     * @var int 2段階認証方式 SMS
-     */
-    private const AUTH_TYPE_SMS = 1;
-
-    /**
-     * @var int 2段階認証方式 アプリ
-     */
-    private const AUTH_TYPE_APP = 2;
-
-    /**
      * @var int デフォルトの認証の有効日数
      */
     public const DEFAULT_EXPIRE_DATE = 14;
@@ -123,6 +113,7 @@ class CustomerTwoFactorAuthService
      * @var TwoFactorAuth
      */
     protected $tfa;
+
     /**
      * @var \Eccube\Entity\BaseInfo|object|null
      */
@@ -132,11 +123,6 @@ class CustomerTwoFactorAuthService
      * @var TwoFactorAuthConfig
      */
     private $twoFactorAuthConfig;
-
-    /**
-     * @var \Twig_Environment
-     */
-    private $twig;
 
     /**
      * @required
@@ -158,7 +144,6 @@ class CustomerTwoFactorAuthService
      * @param RequestStack            $requestStack
      * @param BaseInfoRepository      $baseInfoRepository
      * @param TwoFactorAuthConfigRepository     $smsConfigRepository
-     * @param \Twig_Environment       $twig
      */
     public function __construct(
         EntityManagerInterface  $entityManager,
@@ -166,8 +151,7 @@ class CustomerTwoFactorAuthService
         EncoderFactoryInterface $encoderFactory,
         RequestStack            $requestStack,
         BaseInfoRepository      $baseInfoRepository,
-        TwoFactorAuthConfigRepository     $smsConfigRepository,
-        \Twig_Environment $twig
+        TwoFactorAuthConfigRepository     $smsConfigRepository
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -195,7 +179,6 @@ class CustomerTwoFactorAuthService
         }
 
         $this->twoFactorAuthConfig = $smsConfigRepository->findOne();
-        $this->twig = $twig;
     }
 
     /**
@@ -224,7 +207,7 @@ class CustomerTwoFactorAuthService
 
         if (($json = $this->request->cookies->get($cookieName))) {
             $configs = json_decode($json);
-            $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getTwoFactorAuthSecret(), $Customer->getSalt());
+            $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getSecretKey(), $Customer->getSalt());
             if (
                 $configs
                 && isset($configs->{$Customer->getId()})
@@ -252,7 +235,7 @@ class CustomerTwoFactorAuthService
      */
     public function createAuthedCookie($Customer, $route = null)
     {
-        $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getTwoFactorAuthSecret(), $Customer->getSalt());
+        $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getSecretKey(), $Customer->getSalt());
 
         $cookieName = $this->cookieName;
         $expire = $this->expire;
@@ -286,30 +269,12 @@ class CustomerTwoFactorAuthService
             ($this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null) // sameSite
         );
 
+        if ($route == null && !$this->isAuth($Customer)) {
+            // 直リンクで重要操作ルートを指定された場合、ログイン認証済みCookieが存在しない為、このタイミングで生成する
+            $login_cookie = $this->createAuthedCookie($Customer, 'mypage');
+        }
+
         return $cookie;
-    }
-
-    /**
-     * 認証コードを取得.
-     * 
-     * @param string $authKey
-     * @param string $token
-     *
-     * @return boolean
-     */
-    public function verifyCode($authKey, $token)
-    {
-        return $this->tfa->verifyCode($authKey, $token, 2);
-    }
-
-    /**
-     * 秘密鍵生成.
-     * 
-     * @return string
-     */
-    public function createSecret()
-    {
-        return $this->tfa->createSecret();
     }
 
     /**
@@ -320,45 +285,6 @@ class CustomerTwoFactorAuthService
     public function isEnabled(): bool
     {
         return $this->baseInfo->isTwoFactorAuthUse();
-    }
-
-    /**
-     * ワンタイムトークンチェック.
-     * 
-     * @return boolean
-     */
-    public function checkOneTime($Customer, $one_time_token)
-    {
-        $now = new \DateTime();
-        if ($Customer->getOneTimeToken() !== $one_time_token || $Customer->getOneTimeTokenExpire() < $now) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * ワンタイムトークンを送信.
-     * 
-     * @param \Eccube\Entity\Customer $Customer
-     * @param string $phoneNumber 
-     * 
-     */
-    public function sendOnetimeToken($Customer, $phoneNumber) 
-    {
-        // ワンタイムトークン生成・保存
-        $token = $Customer->createOneTimeToken();
-        $this->entityManager->persist($Customer);
-        $this->entityManager->flush();
-
-        // ワンタイムトークン送信メッセージをレンダリング
-        $twig = 'TwoFactorAuthCustomer42/Resource/template/default/sms/onetime_message.twig';
-        $body = $this->twig->render($twig , [
-            'Customer' => $Customer,
-            'token' => $token,
-        ]);
-
-        // SMS送信
-        return $this->sendBySms($Customer, $phoneNumber, $body);
     }
 
     /**

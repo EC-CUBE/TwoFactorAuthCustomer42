@@ -1,9 +1,9 @@
-admin.setting.shop.shop.customer_two_factor_is_activate_sms: SMSによる本人認証
-admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip: 会員登録時、メール認証に加え携帯電話による本人認証を実施します
+admin.setting.shop.shop.customer_two_factor_is_activate_sms: 本会員時の本人認証
+admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip: 本会員登録時、メール認証に加え携帯電話による本人認証を実施します
 admin.setting.shop.shop.customer_two_factor_auth: 2段階認証機能
-admin.setting.shop.shop.customer_two_factor_auth_tooltip: ログイン時、通常(メールアドレス・パスワード)認証に加え、SMSまたは認証アプリによる二段階認証を実施します。
+admin.setting.shop.shop.customer_two_factor_auth_tooltip: ログイン時、通常(メールアドレス・パスワード)認証に加え、多要素認証プラグインによる2段階認証を実施します。
 admin.setting.shop.shop.customer_two_factor_auth_type: 2段階認証方法
-admin.setting.shop.shop.customer_two_factor_auth_type_tooltip: SMS/アプリ認証
+admin.setting.shop.shop.customer_two_factor_auth_type_tooltip: 
 
 admin.setting.2fa.config.title: 2段階認証設定
 admin.setting.2fa.sms.sub_title : SMS送信設定(Twilio)
@@ -51,4 +51,3 @@ front.2fa.auth: 認証
 front.2fa.setting: 設定
 front.2fa.onetime.invalid_message__reinput : 認証に失敗しました。正しい認証コードを入力してください。
 front.2fa.sms.send.failure_message : 認証コードが送信できませんでした。正しい電話番号を入力してください。
-front.2fa.app.message: 2段階認証用スマートフォンアプリに表示されている6桁の数字を入力してください。

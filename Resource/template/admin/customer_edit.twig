@@ -16,7 +16,7 @@
 <div class="card rounded border-0 mb-4" id="tow_factor_auth_setting">
     <div class="card-header">
         <div class="row">
-            <div class="col-8"><span class="card-title">{{ 'admin.customer.customer_info'|trans }}</span>
+            <div class="col-8"><span class="card-title">2段階認証情報</span>
             </div>
             <div class="col-4 text-end">
                 <a data-bs-toggle="collapse" href="#ordererInfo"
@@ -39,7 +39,7 @@
             </div>
             <div class="row mb-2">
                 <div class="col-3">
-                    <span>二段階認証の利用</span>
+                    <span>2段階認証の利用</span>
                 </div>
                 <div class="col">
                     {{ form_widget(form.two_factor_auth) }}
@@ -48,20 +48,11 @@
             </div>
             <div class="row mb-2">
                 <div class="col-3">
-                    <span>二段階認証方式</span>
+                    <span>2段階認証方式</span>
                 </div>
                 <div class="col">
                     {{ form_widget(form.two_factor_auth_type) }}
                     {{ form_errors(form.two_factor_auth_type) }}
-                </div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-3">
-                    <span>アプリ認証 秘密鍵</span>
-                </div>
-                <div class="col">
-                    {{ form_widget(form.two_factor_auth_secret) }}
-                    {{ form_errors(form.two_factor_auth_secret) }}
                 </div>
             </div>
         </div>

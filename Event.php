@@ -88,26 +88,9 @@ class Event implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            'Entry/activate.twig' => 'onActivateComplete',
             '@admin/Setting/Shop/shop_master.twig' => 'onRenderAdminShopSettingEdit',
             '@admin/Customer/edit.twig' => 'onRenderAdminCustomerEdit',
         ];
-    }
-
-    /**
-     * [/default/Entry/activate.twig]表示の時のEvent Fork.
-     * 会員登録完了画面を差し替える.
-     *
-     * @param TemplateEvent $event
-     */
-    public function onActivateComplete(TemplateEvent $event)
-    {
-        if ($this->BaseInfo->isOptionActivateSms()) {
-            $templatePath = $this->container->getParameter('eccube_theme_front_dir')
-                .'/TwoFactorAuthCustomer42/Resource/template/default';
-            $source = file_get_contents($templatePath . '/device_auth/activate.twig');
-            $event->setSource($source);
-        }
     }
 
     /**
@@ -125,8 +108,6 @@ class Event implements EventSubscriberInterface
         // add twig
         $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/shop_edit_tfa.twig';
         $event->addSnippet($twig);
-
-        $activateFlg = $this->BaseInfo->isOptionCustomerActivate();
     }
 
     /**
@@ -140,45 +121,6 @@ class Event implements EventSubscriberInterface
         // add twig
         $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/customer_edit.twig';
         $event->addSnippet($twig);
-    }
-
-    /**
-     * 仮会員登録時のEvent Fork.
-     *
-     * @param EventArgs $event
-     */
-    public function onEntryComplete(EventArgs $event)
-    {
-        /*
-        if ($this->BaseInfo->isOptionActivateSms() && $this->BaseInfo->isOptionCustomerActivate()) {
-            $this->sendCustomerConfirmMessage($event['Customer']);
-        }
-        */
-    }
-
-    /**
-     * 管理画面からの再送信時のEvent Fork.
-     *
-     * @param EventArgs $event
-     */
-    public function onResendComplete(EventArgs $event)
-    {
-        /*
-        if ($this->BaseInfo->isOptionActivateSms() && $this->BaseInfo->isOptionCustomerActivate()) {
-            $this->sendCustomerConfirmMessage($event['Customer']);
-        }
-        */
-    }
-
-
-    /**
-     * 対象顧客へアクティベーションメッセージを送信.
-     *
-     * @param Eccube\Entity\Customer $Customer
-     */
-    private function sendCustomerConfirmMessage(\Eccube\Entity\Customer $Customer)
-    {
-        return $this->customerTwoFactorAuthService->sendActivationUrl($Customer);
     }
 
 }

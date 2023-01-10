@@ -211,4 +211,64 @@ class TwoFactorAuthConfig extends AbstractEntity
         return $this->include_route;
     }
 
+    // TODO
+    public function addIncludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getIncludeRoute());
+
+        if (!in_array($route, $routes)) {
+            $this->setIncludeRoute($this->include_route . PHP_EOL . $route);
+        }
+
+        return $this;
+    }
+
+    public function removeIncludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getIncludeRoute());
+
+        if (in_array($route, $routes)) {
+            $routes = array_splice(array_search($route, $routes, true));
+            $this->setIncludeRoute($this->getRoutesAsString($routes));
+        }
+
+        return $this;
+    }
+
+    public function addExcludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getExcludeRoute());
+
+        if (!in_array($route, $routes)) {
+            $this->setExcludeRoute($this->exclude_route . PHP_EOL . $route);
+        }
+
+        return $this;
+    }
+
+    public function removeExcludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getExcludeRoute());
+
+        if (in_array($route, $routes)) {
+            $routes = array_splice(array_search($route, $routes, true));
+            $this->setExcludeRoute($this->getRoutesAsString($routes));
+        }
+
+        return $this;
+    }
+
+    private function getRoutes(?string $routes): array
+    {
+        if (!$routes) {
+            return [];
+        }
+        return explode(PHP_EOL, $routes);
+    }
+
+    private function getRoutesAsString(array $routes): string
+    {
+        return implode(PHP_EOL, $routes);
+    }
+
 }
