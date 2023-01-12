@@ -2,15 +2,15 @@
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type;
 
 use Eccube\Common\EccubeConfig;
-use Plugin\TwoFactorAuthCustomer42\Entity\SmsConfig;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class SmsConfigType extends AbstractType
+class TwoFactorAuthConfigType extends AbstractType
 {
     /**
      * @var EccubeConfig
@@ -23,7 +23,7 @@ class SmsConfigType extends AbstractType
     protected $containerInterface;
 
     /**
-     * SmsConfigType constructor.
+     * TwoFactorAuthConfigType constructor.
      *
      * @param EccubeConfig $eccubeConfig
      */
@@ -53,7 +53,25 @@ class SmsConfigType extends AbstractType
             'constraints' => [
                 new Assert\NotBlank(),
             ],
-          ]);
+          ])
+          ->add('include_route', TextareaType::class, [
+            'required' => false,
+            'constraints' => [
+              new Assert\Length([
+                  'max' => $this->eccubeConfig['eccube_ltext_len'],
+              ]),
+            ],
+          ])
+          ->add('exclude_route', TextareaType::class, [
+            'required' => false,
+            'constraints' => [
+              new Assert\Length([
+                  'max' => $this->eccubeConfig['eccube_ltext_len'],
+              ]),
+            ],
+          ])
+          
+          ;
       }
 
     /**
@@ -63,7 +81,7 @@ class SmsConfigType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'data_class' => SmsConfig::class,
+            'data_class' => TwoFactorAuthConfig::class,
         ]);
     }
 

@@ -4,14 +4,41 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
-use Eccube\Repository\BaseInfoRepository;
-
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 
 /**
  * @EntityExtension("Eccube\Entity\Customer")
  */
 trait CustomerTrait
 {
+    /**
+     * @var ?string
+     *
+     * @ORM\Column(name="device_auth_one_time_token", type="string", length=10, nullable=true)
+     */
+    private ?string $device_auth_one_time_token;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="device_auth_one_time_token_expire", type="datetimetz", nullable=true)
+     */
+    private $device_auth_one_time_token_expire;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="device_authed", type="boolean", nullable=false, options={"default":false})
+     */
+    private bool $device_authed = false;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="device_authed_phone_number", type="string", length=14, nullable=true)
+     */
+    private $device_authed_phone_number;
+
     /**
      * @var boolean
      *
@@ -20,39 +47,112 @@ trait CustomerTrait
     private bool $two_factor_auth = false;
 
     /**
+     * TODO: 2FATypeへ
      * 2段階認証機能の設定
      * @var int
-     * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=false, options={"default":1})
+     * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
-    private int $two_factor_auth_type = 1;
+    private ?int $two_factor_auth_type;
 
     /**
-     * @var ?string
+     * @var TwoFactorAuthType
      *
-     * @ORM\Column(name="two_factor_auth_secret", type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity="\Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType")
+     * @ORM\JoinColumns({
+     *   @ORM\JoinColumn(name="two_factor_auth_type_id", referencedColumnName="id")
+     * })
      */
-    private ?string $two_factor_auth_secret;
+    private $TwoFactorAuthType;
 
     /**
-     * @var ?string
-     *
-     * @ORM\Column(name="one_time_token", type="string", length=10, nullable=true)
+     * @return string
      */
-    private ?string $one_time_token;
+    public function createDeviceAuthOneTimeToken(): ?string
+    {
+        $now = new \DateTime();
+
+        // TODO: なんちゃって
+        $token = '';
+        for ($i = 0; $i < 6; $i++) {
+            $token .= (string)rand(0, 9);
+        }
+
+        $this->setDeviceAuthOneTimeToken($token);
+        $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
+        return $token;
+    }
 
     /**
-     * @var \DateTime|null
-     *
-     * @ORM\Column(name="one_time_token_expire", type="datetimetz", nullable=true)
+     * @return string
      */
-    private $one_time_token_expire;
+    public function getDeviceAuthOneTimeToken(): ?string
+    {
+        return $this->device_auth_one_time_token;
+    }
 
     /**
-     * @var boolean
-     *
-     * @ORM\Column(name="device_authed", type="boolean", nullable=false, options={"default":false})
+     * @param string $device_auth_one_time_token
      */
-    private bool $device_authed = false;
+    public function setDeviceAuthOneTimeToken(?string $device_auth_one_time_token): void
+    {
+        $this->device_auth_one_time_token = $device_auth_one_time_token;
+    }
+
+    /**
+     * Set oneTimeTokenExpire.
+     *
+     * @param \DateTime|null $resetExpire
+     *
+     * @return Customer
+     */
+    public function setDeviceAuthOneTimeTokenExpire($deviceAuthOneTimeTokenExpire = null)
+    {
+        $this->device_auth_one_time_token_expire = $deviceAuthOneTimeTokenExpire;
+
+        return $this;
+    }
+
+    /**
+     * Get resetExpire.
+     *
+     * @return \DateTime|null
+     */
+    public function getDeviceAuthOneTimeTokenExpire()
+    {
+        return $this->device_auth_one_time_token_expire;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeviceAuthed(): bool
+    {
+        return $this->device_authed;
+    }
+
+    /**
+     * @param bool $two_factor_auth
+     */
+    public function setDeviceAuthed(bool $device_authed): void
+    {
+        $this->device_authed = $device_authed;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeviceAuthedPhoneNumber(): ?string
+    {
+        return $this->device_authed_phone_number;
+    }
+
+    /**
+     * @param string $device_authed_phone_number
+     */
+    public function setDeviceAuthedPhoneNumber(string $device_authed_phone_number): void
+    {
+        $this->device_authed_phone_number = $device_authed_phone_number;
+    }
 
     /**
      * @return bool
@@ -71,123 +171,27 @@ trait CustomerTrait
     }
 
     /**
-     * @return int
-     */
-    public function getTwoFactorAuthType(): int
-    {
-        return $this->two_factor_auth_type;
-    }
-
-    /**
-     * @param int $two_factor_auth_type
-     */
-    public function setTwoFactorAuthType(int $two_factor_auth_type): void
-    {
-        $this->two_factor_auth_type = $two_factor_auth_type;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTwoFactorAuthSecret(): ?string
-    {
-        return $this->two_factor_auth_secret;
-    }
-
-    /**
-     * @param string $two_factor_auth_secret
-     */
-    public function setTwoFactorAuthSecret(?string $two_factor_auth_secret): void
-    {
-        $this->two_factor_auth_secret = $two_factor_auth_secret;
-    }
-
-    /**
-     * @return string
-     */
-    public function createOneTimeToken(): ?string
-    {
-        $now = new \DateTime();
-
-        if ($this->one_time_token_expire != null && $this->one_time_token_expire > $now) {
-            return $this->getOneTimeToken();
-        }
-
-        // TODO: なんちゃって
-        $token = '';
-        for ($i = 0; $i < 6; $i++) {
-            $token .= (string)rand(0, 9);
-        }
-
-        $this->setOneTimeToken($token);
-        $this->setOneTimeTokenExpire($now->modify('+5 mins'));
-        return $token;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOneTimeToken(): ?string
-    {
-        return $this->one_time_token;
-    }
-
-    /**
-     * @param string $one_time_token
-     */
-    public function setOneTimeToken(?string $one_time_token): void
-    {
-        $this->one_time_token = $one_time_token;
-    }
-
-    /**
-     * Set oneTimeTokenExpire.
+     * Set two factor auth type.
      *
-     * @param \DateTime|null $resetExpire
+     * @param TwoFactorAuthType|null $sex
      *
      * @return Customer
      */
-    public function setOneTimeTokenExpire($oneTimeTokenExpire = null)
+    public function setTwoFactorAuthType(TwoFactorAuthType $twoFactorAuthType = null)
     {
-        $this->one_time_token_expire = $oneTimeTokenExpire;
+        $this->TwoFactorAuthType = $twoFactorAuthType;
 
         return $this;
     }
 
     /**
-     * Get resetExpire.
+     * Get sex.
      *
-     * @return \DateTime|null
+     * @return TwoFactorAuthType|null
      */
-    public function getOneTimeTokenExpire()
+    public function getTwoFactorAuthType()
     {
-        return $this->one_time_token_expire;
-    }
-
-    /**
-     * Get Phone Number(for SMS)
-     * 
-     * @return string
-     */
-    public function getSmsPhoneNumber() 
-    {
-        return '+81' . $this->getPhoneNumber();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isDeviceAuthed(): bool
-    {
-        return $this->device_authed;
-    }
-
-    /**
-     * @param bool $two_factor_auth
-     */
-    public function setDeviceAuthed(bool $device_authed): void
-    {
-        $this->device_authed = $device_authed;
+        return $this->TwoFactorAuthType;
     }
 
 }

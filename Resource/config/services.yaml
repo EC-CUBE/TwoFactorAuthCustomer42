@@ -3,6 +3,10 @@ parameters:
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_SMS_SEND_COOKIE_NAME): 'plugin_eccube_customer_2fa_sms'
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_DEVICE_AUTH_SEND_COOKIE_NAME): 'plugin_eccube_device_auth_2fa_sms'
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE): '14'
+  env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME): 'plugin_eccube_route_customer_2fa'
+  env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE): '1'
 
   plugin_eccube_2fa_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME)%'
+  plugin_eccube_2fa_route_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME)%'
   plugin_eccube_2fa_customer_expire: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE)%'
+  plugin_eccube_2fa_route_customer_expire: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE)%'

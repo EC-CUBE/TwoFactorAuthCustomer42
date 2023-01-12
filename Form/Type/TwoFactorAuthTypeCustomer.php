@@ -13,10 +13,10 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type;
 
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 
 class TwoFactorAuthTypeCustomer extends AbstractType
 {
@@ -26,13 +26,12 @@ class TwoFactorAuthTypeCustomer extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('two_factor_auth_type', ChoiceType::class, [
+            ->add('two_factor_auth_type', EntityType::class, [
                 'label' => 'front.setting.system.two_factor_auth.type',
+                'class' => TwoFactorAuthType::class,
                 'required' => true,
-                'choices' => [
-                    'SMS' => 1,
-                    'APP認証' => 2
-                ],
+                'choice_label' => 'name',
+                'mapped' => true,
             ])
             ;
     }

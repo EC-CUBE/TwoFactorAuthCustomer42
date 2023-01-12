@@ -14,7 +14,6 @@
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -28,7 +27,7 @@ class TwoFactorAuthSmsTypeCustomer extends AbstractType
     {
         $builder
             ->add(
-                'device_token', TextType::class, [
+                'one_time_token', TextType::class, [
                 'label' => 'front.setting.system.two_factor_auth.one_time_token',
                 'required' => true,
                 'constraints' => [
