@@ -23,7 +23,7 @@ use Eccube\Repository\PageLayoutRepository;
 use Eccube\Repository\PageRepository;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Plugin\TwoFactorAuthCustomer42\Entity\SmsConfig;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 
 /**
  * Class PluginManager.
@@ -36,10 +36,6 @@ class PluginManager extends AbstractPluginManager
         ['plg_customer_2fa_device_auth_input_onetime', 'デバイス認証トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/input_onetime'],
         ['plg_customer_2fa_device_auth_complete', 'デバイス認証完了', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/complete'],
         ['plg_customer_2fa_auth_type_select', '多要素認証方式選択', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/select_type'],
-        ['plg_customer_2fa_sms_send_onetime', 'SMS認証送信先入力', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/sms/send_onetime'],
-        ['plg_customer_2fa_sms_input_onetime', 'SMS認証トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/sms/input_onetime'],
-        ['plg_customer_2fa_app_create', 'アプリ認証初期設定・トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/app/register'],
-        ['plg_customer_2fa_app_challenge', 'アプリ認証トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/app/challenge'],
     ];
 
     /**
@@ -175,16 +171,25 @@ class PluginManager extends AbstractPluginManager
      */
     protected function createConfig(EntityManagerInterface $em)
     {
-        $SmsConfig = $em->find(SmsConfig::class, 1);
-        if ($SmsConfig) {
-            return $SmsConfig;
+        $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
+        if ($TwoFactorAuthConfig) {
+            return $TwoFactorAuthConfig;
         }
-        // 初期値を保存
-        $SmsConfig = new SmsConfig();
-        $em->persist($SmsConfig);
-        $em->flush($SmsConfig);
 
-        return $SmsConfig;
+        // 初期値を保存
+        $TwoFactorAuthConfig = new TwoFactorAuthConfig();
+
+        // TODO:削除
+        $TwoFactorAuthConfig
+            ->setApiKey("ACae86d0224d3c0fbdb292bb7e6d467bcb")
+            ->setApiSecret("1cb986b95fbfd67f1d71ec80b6c31195")
+            ->setFromTel("18563862532")
+        ;
+
+        $em->persist($TwoFactorAuthConfig);
+        $em->flush();
+
+        return;
     }    
 
 }

@@ -19,16 +19,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * SmsConfig
+ * TwoFactorConfig
  *
- * @ORM\Table(name="plg_sms_config")
+ * @ORM\Table(name="plg_two_factor_auth_config")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discriminator_type", type="string", length=255)
  * @ORM\HasLifecycleCallbacks()
- * @ORM\Entity(repositoryClass="Plugin\TwoFactorAuthCustomer42\Repository\SmsConfigRepository")
+ * @ORM\Entity(repositoryClass="Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository")
  * @UniqueEntity("id")
  */
-class SmsConfig extends AbstractEntity
+class TwoFactorAuthConfig extends AbstractEntity
 {
     /**
      * @var int
@@ -44,21 +44,28 @@ class SmsConfig extends AbstractEntity
      *
      * @ORM\Column(name="api_key", type="string", nullable=true, length=200)
      */
-    private $api_key = "ACae86d0224d3c0fbdb292bb7e6d467bcb";
+    private $api_key = null;
 
     /**
      * @var string
      *
      * @ORM\Column(name="api_secret", type="string", nullable=true, length=200)
      */
-    private $api_secret = "db93fbbc95e74c9c363043d28adf2fd3";
+    private $api_secret = null;
 
     /**
      * @var string
      *
      * @ORM\Column(name="from_tel", type="string", nullable=true, length=200)
      */
-    private $from_tel = "18563862532";
+    private $from_tel = null;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="include_route", type="text", nullable=true)
+     */
+    private $include_route = null;
 
     /**
      * Constructor.
@@ -82,7 +89,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $apiKey
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setApiKey($apiKey)
     {
@@ -106,7 +113,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $apiSecret
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setApiSecret($apiSecret)
     {
@@ -130,7 +137,7 @@ class SmsConfig extends AbstractEntity
      *
      * @param string $fromTel
      *
-     * @return SmsConfig
+     * @return TwoFactorAuthConfig
      */
     public function setFromTel($fromTel)
     {
@@ -147,6 +154,67 @@ class SmsConfig extends AbstractEntity
     public function getFromTel()
     {
         return $this->from_tel;
+    }
+
+    /**
+     * Set include_route.
+     *
+     * @param string|null $include_route
+     *
+     * @return TwoFactorAuthConfig
+     */
+    public function setIncludeRoute($include_route = null)
+    {
+        $this->include_route = $include_route;
+
+        return $this;
+    }
+
+    /**
+     * Get include_route.
+     *
+     * @return string|null
+     */
+    public function getIncludeRoute()
+    {
+        return $this->include_route;
+    }
+
+    // TODO
+    public function addIncludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getIncludeRoute());
+
+        if (!in_array($route, $routes)) {
+            $this->setIncludeRoute($this->include_route . PHP_EOL . $route);
+        }
+
+        return $this;
+    }
+
+    public function removeIncludeRoute(string $route)
+    {
+        $routes = $this->getRoutes($this->getIncludeRoute());
+
+        if (in_array($route, $routes)) {
+            $routes = array_splice(array_search($route, $routes, true));
+            $this->setIncludeRoute($this->getRoutesAsString($routes));
+        }
+
+        return $this;
+    }
+
+    private function getRoutes(?string $routes): array
+    {
+        if (!$routes) {
+            return [];
+        }
+        return explode(PHP_EOL, $routes);
+    }
+
+    private function getRoutesAsString(array $routes): string
+    {
+        return implode(PHP_EOL, $routes);
     }
 
 }
