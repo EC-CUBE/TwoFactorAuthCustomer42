@@ -62,15 +62,6 @@ class TwoFactorAuthConfigType extends AbstractType
               ]),
             ],
           ])
-          ->add('exclude_route', TextareaType::class, [
-            'required' => false,
-            'constraints' => [
-              new Assert\Length([
-                  'max' => $this->eccubeConfig['eccube_ltext_len'],
-              ]),
-            ],
-          ])
-          
           ;
       }
 

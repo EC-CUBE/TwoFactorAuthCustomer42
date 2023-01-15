@@ -93,11 +93,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $session;
 
     /**
-     * 除外ルート.
-     */
-    protected $exclude_routes;
-
-    /**
      * 個別認証ルート.
      */
     protected $include_routes;
@@ -136,21 +131,13 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->session = $session;
 
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
-        $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
 
+        // 設定されている重要操作に加え、ログイン系を追加
         $this->include_routes = array_merge($this->include_routes, [
             'login',
             'mypage_login',
             'shopping_login',
-            'contact',
         ]);
-        /*
-        $this->exclude_routes = array_merge($this->exclude_routes, [
-            'entry',
-            'entry_confirm',
-            'logout',
-        ]);
-        */
     }
 
     /**

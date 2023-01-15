@@ -68,13 +68,6 @@ class TwoFactorAuthConfig extends AbstractEntity
     private $include_route = null;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="exclude_route", type="text", nullable=true)
-     */
-    private $exclude_route = null;
-
-    /**
      * Constructor.
      */
     public function __construct()
@@ -164,30 +157,6 @@ class TwoFactorAuthConfig extends AbstractEntity
     }
 
     /**
-     * Set exclude_route.
-     *
-     * @param string|null $exclude_route
-     *
-     * @return TwoFactorAuthConfig
-     */
-    public function setExcludeRoute($exclude_route = null)
-    {
-        $this->exclude_route = $exclude_route;
-
-        return $this;
-    }
-
-    /**
-     * Get exclude_route.
-     *
-     * @return string|null
-     */
-    public function getExcludeRoute()
-    {
-        return $this->exclude_route;
-    }
-
-    /**
      * Set include_route.
      *
      * @param string|null $include_route
@@ -230,29 +199,6 @@ class TwoFactorAuthConfig extends AbstractEntity
         if (in_array($route, $routes)) {
             $routes = array_splice(array_search($route, $routes, true));
             $this->setIncludeRoute($this->getRoutesAsString($routes));
-        }
-
-        return $this;
-    }
-
-    public function addExcludeRoute(string $route)
-    {
-        $routes = $this->getRoutes($this->getExcludeRoute());
-
-        if (!in_array($route, $routes)) {
-            $this->setExcludeRoute($this->exclude_route . PHP_EOL . $route);
-        }
-
-        return $this;
-    }
-
-    public function removeExcludeRoute(string $route)
-    {
-        $routes = $this->getRoutes($this->getExcludeRoute());
-
-        if (in_array($route, $routes)) {
-            $routes = array_splice(array_search($route, $routes, true));
-            $this->setExcludeRoute($this->getRoutesAsString($routes));
         }
 
         return $this;

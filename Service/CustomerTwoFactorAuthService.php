@@ -26,14 +26,14 @@ use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 class CustomerTwoFactorAuthService
 {
     /**
-     * @var int デフォルトの認証の有効日数
+     * @var int デフォルトの認証の有効時間
      */
-    public const DEFAULT_EXPIRE_DATE = 14;
+    public const DEFAULT_EXPIRE_TIME = 3600;
 
     /**
-     * @var int ルート認証の有効日数
+     * @var int ルート認証の有効時間
      */
-    public const ROUTE_EXPIRE_DATE = 1;
+    public const ROUTE_EXPIRE_TIME = 3600;
 
     /**
      * @var string Cookieに保存する時のキー名
@@ -102,12 +102,12 @@ class CustomerTwoFactorAuthService
     /**
      * @var int
      */
-    protected $expire = self::DEFAULT_EXPIRE_DATE;
+    protected $expire = self::DEFAULT_EXPIRE_TIME;
 
     /**
      * @var int
      */
-    protected $route_expire = self::ROUTE_EXPIRE_DATE;
+    protected $route_expire = self::ROUTE_EXPIRE_TIME;
 
     /**
      * @var TwoFactorAuth
@@ -143,7 +143,7 @@ class CustomerTwoFactorAuthService
      * @param EncoderFactoryInterface $encoderFactory
      * @param RequestStack            $requestStack
      * @param BaseInfoRepository      $baseInfoRepository
-     * @param TwoFactorAuthConfigRepository     $smsConfigRepository
+     * @param TwoFactorAuthConfigRepository     $twoFactorAuthConfigRepository
      */
     public function __construct(
         EntityManagerInterface  $entityManager,
@@ -151,7 +151,7 @@ class CustomerTwoFactorAuthService
         EncoderFactoryInterface $encoderFactory,
         RequestStack            $requestStack,
         BaseInfoRepository      $baseInfoRepository,
-        TwoFactorAuthConfigRepository     $smsConfigRepository
+        TwoFactorAuthConfigRepository     $twoFactorAuthConfigRepository
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -178,7 +178,7 @@ class CustomerTwoFactorAuthService
             $this->route_expire = (int)$route_expire;
         }
 
-        $this->twoFactorAuthConfig = $smsConfigRepository->findOne();
+        $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
     }
 
     /**
@@ -216,7 +216,7 @@ class CustomerTwoFactorAuthService
                 && $config->key === $encodedString
                 && (
                     $this->expire == 0
-                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $expire . ' day'))))
+                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $expire))))
                 )
             ) {
                 return true;
@@ -260,7 +260,7 @@ class CustomerTwoFactorAuthService
         $cookie = new Cookie(
             $cookieName, // name
             json_encode($configs), // value
-            ($expire == 0 ? 0 : time() + ($expire * 24 * 60 * 60)), // expire
+            ($expire == 0 ? 0 : time() + $expire), // expire
             $this->request->getBasePath(), // path
             null, // domain
             ($this->eccubeConfig->get('eccube_force_ssl') ? true : false), // secure
@@ -321,21 +321,6 @@ class CustomerTwoFactorAuthService
     {
         $routes = [];
         $include = $this->twoFactorAuthConfig->getIncludeRoute();
-        if ($include) {
-            $routes = preg_split('/\R/', $include);
-        }
-        return $routes;
-    }
-
-    /**
-     * 認証除外ルートを取得.
-     * 
-     * @return array
-     */
-    public function getExcludeRoutes() : array
-    {
-        $routes = [];
-        $include = $this->twoFactorAuthConfig->getExcludeRoute();
         if ($include) {
             $routes = preg_split('/\R/', $include);
         }

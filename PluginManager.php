@@ -186,10 +186,6 @@ class PluginManager extends AbstractPluginManager
             ->setFromTel("18563862532")
         ;
 
-        // 除外ルートの登録
-        foreach ($this->pages as $p) {
-            $TwoFactorAuthConfig->addExcludeRoute($p[0]);
-        }
         $em->persist($TwoFactorAuthConfig);
         $em->flush();
 
