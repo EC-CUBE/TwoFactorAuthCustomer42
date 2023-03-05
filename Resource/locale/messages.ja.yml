@@ -15,6 +15,12 @@ admin.setting.2fa.route.sub_title : 認証ルーティング設定
 admin.setting.2fa.route.include : 重要操作ルーティング
 admin.setting.2fa.route.exclude : 除外ルーティング
 
+admin.customer.2fa.title: 2段階認証設定
+admin.customer.2fa.device_authed: デバイス認証
+admin.customer.2fa.device_authed_phone_number: デバイス認証済み電話番号
+admin.customer.2fa.is_2fa_use: 2段階認証の利用
+admin.customer.2fa.type: 2段階認証方式
+
 front.2fa.entry.complete_title: 本人確認を実施してください
 front.2fa.entry.complete_message__title: メール認証ありがとうございます。
 front.2fa.entry.complete_message__activated: |

@@ -17,8 +17,8 @@ use Eccube\Repository\BaseInfoRepository;
 use Eccube\Controller\AbstractController;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthConfigType;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

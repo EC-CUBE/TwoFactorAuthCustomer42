@@ -73,7 +73,7 @@ class Event implements EventSubscriberInterface
     public function __construct(
         ContainerInterface $container,
         BaseInfoRepository $baseInfoRepository,
-        EntityManagerInterface $entityManager, 
+        EntityManagerInterface $entityManager,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         \Twig_Environment $twig
     )
@@ -94,7 +94,7 @@ class Event implements EventSubscriberInterface
     }
 
     /**
-     * [/admin/setting/shop]表示の時のEvent Fork.
+     * [/admin/setting/shop]表示の時のEvent Hook.
      * SMS関連項目を追加する.
      *
      * @param TemplateEvent $event
