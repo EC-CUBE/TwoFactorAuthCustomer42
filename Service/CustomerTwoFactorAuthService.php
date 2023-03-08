@@ -130,17 +130,8 @@ class CustomerTwoFactorAuthService
     private $default_tfa_routes = [
         'login',
         'mypage_login',
-        'mypage_login',
         'mypage',
-        'mypage_history',
         'mypage_order',
-        'mypage_favorite',
-        'mypage_favorite_delete',
-        'mypage_delivery',
-        'mypage_delivery_new',
-        'mypage_delivery_edit',
-        'mypage_delivery_delete',
-        'mypage_change',
         'shopping_login',
     ];
 
@@ -322,13 +313,12 @@ class CustomerTwoFactorAuthService
      */
     public function sendBySms($Customer, $phoneNumber, $body)
     {
-        // TODO : https://symfony.com/doc/current/notifier.html でまとめたい
         // Twilio
         $twilio = new \Twilio\Rest\Client(
             $this->twoFactorAuthConfig->getApiKey(),
             $this->twoFactorAuthConfig->getApiSecret()
         );
-        // SMS送信
+        // SMS送信(現在国内電話番号のみ対象)
         $message = $twilio->messages
                     ->create('+81' . $phoneNumber,
                         array(

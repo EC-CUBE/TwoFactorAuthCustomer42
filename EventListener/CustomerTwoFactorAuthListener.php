@@ -134,8 +134,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->session = $session;
 
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
-        $this->include_routes = array_merge($this->include_routes, $this->customerTwoFactorAuthService->getDefaultAuthRoutes());
-
         $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
     }
 
