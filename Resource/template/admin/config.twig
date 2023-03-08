@@ -24,12 +24,6 @@
                                         <span class="card-title">{{ 'admin.setting.2fa.sms.sub_title'|trans }}</span>
                                     </div>
                                 </div>
-                                <div class="col-4 text-right">
-                                    <a data-toggle="collapse" href="#basicConfig" aria-expanded="false"
-                                       aria-controls="basicConfig">
-                                        <i class="fa fa-angle-up fa-lg"></i>
-                                    </a>
-                                </div>
                             </div>
                         </div>
                         <div class="collapse show ec-cardCollapse" id="basicConfig">
@@ -51,8 +45,8 @@
                                 <div class="form-group row">
                                     <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.from_phone_number'|trans }}<span class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
                                     <div class="col mb-2">
-                                        {{ form_widget(form.from_tel) }}
-                                        {{ form_errors(form.from_tel) }}
+                                        {{ form_widget(form.from_phone_number) }}
+                                        {{ form_errors(form.from_phone_number) }}
                                     </div>
                                 </div>
                             </div>
@@ -68,12 +62,6 @@
                                         <span class="card-title">{{ 'admin.setting.2fa.route.sub_title'|trans }}</span>
                                     </div>
                                 </div>
-                                <div class="col-4 text-right">
-                                    <a data-toggle="collapse" href="#basicConfig" aria-expanded="false"
-                                       aria-controls="basicConfig">
-                                        <i class="fa fa-angle-up fa-lg"></i>
-                                    </a>
-                                </div>
                             </div>
                         </div>
                         <div class="collapse show ec-cardCollapse" id="basicConfig">
@@ -81,15 +69,15 @@
                                 <div class="form-group row">
                                     <label class="col-2 control-label">{{ 'admin.setting.2fa.route.include'|trans }}<span class="badge bg-primary ms-1"></span></label>
                                     <div class="col mb-2">
-                                        {{ form_widget(form.include_route, { 'attr': { 'rows': 8 }}) }}
-                                        {{ form_errors(form.include_route) }}
+                                        {{ form_widget(form.include_routes, { 'attr': { 'rows': 8 }}) }}
+                                        {{ form_errors(form.include_routes) }}
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-2 control-label">{{ 'admin.setting.2fa.route.exclude'|trans }}<span class="badge bg-primary ms-1"></span></label>
                                     <div class="col mb-2">
-                                        {{ form_widget(form.exclude_route, { 'attr': { 'rows': 8 }}) }}
-                                        {{ form_errors(form.exclude_route) }}
+                                        {{ form_widget(form.exclude_routes, { 'attr': { 'rows': 8 }}) }}
+                                        {{ form_errors(form.exclude_routes) }}
                                     </div>
                                 </div>
                             </div>

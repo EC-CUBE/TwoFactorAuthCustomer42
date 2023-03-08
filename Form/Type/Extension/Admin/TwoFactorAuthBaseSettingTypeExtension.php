@@ -47,7 +47,7 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
                 'required' => false,
                 'mapped' => true
             ])
-            ->add('option_activate_sms', ToggleSwitchType::class, [
+            ->add('option_activate_device', ToggleSwitchType::class, [
                 'required' => false,
                 'mapped' => true
             ])
