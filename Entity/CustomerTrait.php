@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -37,7 +48,7 @@ trait CustomerTrait
      *
      * @ORM\Column(name="device_authed_phone_number", type="string", length=14, nullable=true)
      */
-    private $device_authed_phone_number;
+    private ?string $device_authed_phone_number;
 
     /**
      * @var boolean
@@ -49,7 +60,9 @@ trait CustomerTrait
     /**
      * TODO: 2FATypeへ
      * 2段階認証機能の設定
+     *
      * @var int
+     *
      * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
     private ?int $two_factor_auth_type;
@@ -73,11 +86,12 @@ trait CustomerTrait
 
         $token = '';
         for ($i = 0; $i < 6; $i++) {
-            $token .= (string)random_int(0, 9);
+            $token .= (string) random_int(0, 9);
         }
 
         $this->setDeviceAuthOneTimeToken($token);
         $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
+
         return $token;
     }
 
@@ -146,9 +160,9 @@ trait CustomerTrait
     }
 
     /**
-     * @param string $device_authed_phone_number
+     * @param string|null $device_authed_phone_number
      */
-    public function setDeviceAuthedPhoneNumber(string $device_authed_phone_number): void
+    public function setDeviceAuthedPhoneNumber(?string $device_authed_phone_number): void
     {
         $this->device_authed_phone_number = $device_authed_phone_number;
     }
@@ -192,5 +206,4 @@ trait CustomerTrait
     {
         return $this->TwoFactorAuthType;
     }
-
 }
