@@ -263,7 +263,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     {
         /** @var Customer $Customer */
         $Customer = $this->getUser();
-        if (!$this->customerTwoFactorAuthService->isAuthed($Customer, $this->getCallbackRoute())) {
+        if ($Customer != null && !$this->customerTwoFactorAuthService->isAuthed($Customer, $this->getCallbackRoute())) {
             return false;
         }
         return true;
