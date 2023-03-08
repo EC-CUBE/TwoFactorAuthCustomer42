@@ -27,7 +27,7 @@ trait CustomerTrait
      *
      * @ORM\Column(name="device_auth_one_time_token", type="string", length=10, nullable=true)
      */
-    private ?string $device_auth_one_time_token;
+    private ?string $device_auth_one_time_token = null;
 
     /**
      * @var \DateTime|null
@@ -48,7 +48,7 @@ trait CustomerTrait
      *
      * @ORM\Column(name="device_authed_phone_number", type="string", length=14, nullable=true)
      */
-    private ?string $device_authed_phone_number;
+    private ?string $device_authed_phone_number = null;
 
     /**
      * @var boolean
@@ -65,7 +65,7 @@ trait CustomerTrait
      *
      * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
-    private ?int $two_factor_auth_type;
+    private ?int $two_factor_auth_type = null;
 
     /**
      * @var TwoFactorAuthType
@@ -75,7 +75,7 @@ trait CustomerTrait
      *   @ORM\JoinColumn(name="two_factor_auth_type_id", referencedColumnName="id")
      * })
      */
-    private $TwoFactorAuthType;
+    private $TwoFactorAuthType = null;
 
     /**
      * @return string
