@@ -132,6 +132,7 @@ class CustomerTwoFactorAuthService
         'mypage_login',
         'mypage',
         'mypage_order',
+        'shopping',
         'shopping_login',
     ];
 

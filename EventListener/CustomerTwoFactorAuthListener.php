@@ -132,8 +132,11 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->session = $session;
 
-        $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
         $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
+        $this->include_routes = array_merge(
+            $this->customerTwoFactorAuthService->getIncludeRoutes(),
+            $this->customerTwoFactorAuthService->getDefaultAuthRoutes()
+        );
     }
 
     /**
@@ -174,9 +177,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 
         $Customer = $this->requestContext->getCurrentUser();
 
-        if ($Customer && $Customer instanceof Customer) {
-
-            if ($Customer->getStatus()->getId() !== CustomerStatus::ACTIVE) {
+        if ($Customer instanceof Customer) {
+            if ($Customer->getStatus()->getId() !== CustomerStatus::REGULAR) {
                 // ログインしていない場合、処理なし
                 return;
             }
