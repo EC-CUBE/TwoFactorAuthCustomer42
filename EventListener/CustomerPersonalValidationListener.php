@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -159,7 +160,11 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
             return;
         }
 
-        if ($this->baseInfo->isOptionCustomerActivate() && !$this->baseInfo->isOptionActivateDevice()) {
+        if (
+            ($this->baseInfo->isOptionCustomerActivate() && !$this->baseInfo->isOptionActivateDevice())
+            ||
+            !$this->baseInfo->isOptionCustomerActivate()
+        ) {
             // デバイス認証なし かつ 2段階認証使用しない場合は処理なし
             return;
         }
@@ -182,15 +187,16 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
      *
      * @param mixed $event
      *
-     * @throws HttpException\NotFoundHttpException
+     * @throws NotFoundHttpException
      */
     private function deviceAuth($event)
     {
         // アクティベーション
         $secret_key = $event->getRequest()->attributes->get('secret_key');
+
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
         if (is_null($Customer)) {
-            throw new HttpException\NotFoundHttpException();
+            throw new NotFoundHttpException();
         }
 
         if ($Customer->isDeviceAuthed()) {
