@@ -6,12 +6,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Form\Type\Admin\CustomerType;
 use Eccube\Form\Type\PhoneNumberType;
 use Eccube\Form\Type\ToggleSwitchType;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
+use function Symfony\Component\Translation\t;
 
 class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
 {
@@ -27,8 +28,7 @@ class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
      */
     public function __construct(
         EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
     }
 
@@ -48,17 +48,18 @@ class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
             $form = $event->getForm();
             $form->add('two_factor_auth', ToggleSwitchType::class, [
                 'required' => false,
-                'mapped' => true
+                'mapped' => true,
             ])
             ->add('two_factor_auth_type', EntityType::class, [
                 'class' => TwoFactorAuthType::class,
-                'required' => true,
+                'required' => false,
                 'choice_label' => 'name',
                 'mapped' => true,
+                'placeholder' => 'admin.customer.2fa.type_option.default',
             ])
             ->add('device_authed', ToggleSwitchType::class, [
                 'required' => false,
-                'mapped' => true
+                'mapped' => true,
             ])
             ->add('device_authed_phone_number', PhoneNumberType::class, [
                 'required' => false,

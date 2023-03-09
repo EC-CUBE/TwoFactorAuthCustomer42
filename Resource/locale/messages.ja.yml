@@ -3,7 +3,7 @@ admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip: 本会員�
 admin.setting.shop.shop.customer_two_factor_auth: 2段階認証機能
 admin.setting.shop.shop.customer_two_factor_auth_tooltip: ログイン時、通常(メールアドレス・パスワード)認証に加え、多要素認証プラグインによる2段階認証を実施します。
 admin.setting.shop.shop.customer_two_factor_auth_type: 2段階認証方法
-admin.setting.shop.shop.customer_two_factor_auth_type_tooltip: 
+admin.setting.shop.shop.customer_two_factor_auth_type_tooltip:
 
 admin.setting.2fa.config.title: 2段階認証設定
 admin.setting.2fa.sms.sub_title : SMS送信設定(Twilio)
@@ -20,6 +20,7 @@ admin.customer.2fa.device_authed: デバイス認証
 admin.customer.2fa.device_authed_phone_number: デバイス認証済み電話番号
 admin.customer.2fa.is_2fa_use: 2段階認証の利用
 admin.customer.2fa.type: 2段階認証方式
+admin.customer.2fa.type_option.default: 未設定
 
 front.2fa.entry.complete_title: 本人確認を実施してください
 front.2fa.entry.complete_message__title: メール認証ありがとうございます。
