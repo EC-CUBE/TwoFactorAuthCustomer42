@@ -54,6 +54,13 @@ class TwoFactorAuthType extends AbstractEntity
     private $route = null;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(name="is_disabled", type="boolean", nullable=false)
+     */
+    private $isDisabled = false;
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -116,6 +123,22 @@ class TwoFactorAuthType extends AbstractEntity
     public function getRoute()
     {
         return $this->route;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisabled(): bool
+    {
+        return $this->isDisabled;
+    }
+
+    /**
+     * @param bool $isDisabled
+     */
+    public function setIsDisabled(bool $isDisabled): void
+    {
+        $this->isDisabled = $isDisabled;
     }
 
 }

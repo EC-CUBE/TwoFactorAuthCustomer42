@@ -211,6 +211,15 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
             return;
         }
 
+        if($this->requestContext->getCurrentUser() === null) {
+            // ログインしていない場合は処理なし
+            return;
+        }
+
+        if ($this->requestContext->getCurrentUser()->getTwoFactorAuthType()->isDisabled()) {
+            return new RedirectResponse($this->router->generate('logout'), 302);
+        }
+
         $this->multifactorAuth(
             $event,
             $this->requestContext->getCurrentUser(),
@@ -291,6 +300,13 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         // コールバックURLをセッションへ設定
         $this->setCallbackRoute($route);
         // 選択された多要素認証方式で指定されているルートへリダイレクト
+        if ($Customer->getTwoFactorAuthType()->isDisabled()) {
+            $event->setController(function () {
+                return new RedirectResponse($this->router->generate('logout'), 302);
+            });
+            return;
+        }
+
         $url = $this->router->generate(
             $Customer->getTwoFactorAuthType()->getRoute(),
             [],
