@@ -70,21 +70,16 @@ trait CustomerTrait
     private $TwoFactorAuthType = null;
 
     /**
-     * @return string
+     * @param string $hashedOneTimePassword
+     *
+     * @return void
      */
-    public function createDeviceAuthOneTimeToken(): ?string
+    public function createDeviceAuthOneTimeToken(string $hashedOneTimePassword): void
     {
         $now = new \DateTime();
 
-        $token = '';
-        for ($i = 0; $i < 6; $i++) {
-            $token .= (string) random_int(0, 9);
-        }
-
-        $this->setDeviceAuthOneTimeToken($token);
+        $this->setDeviceAuthOneTimeToken($hashedOneTimePassword);
         $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
-
-        return $token;
     }
 
     /**
@@ -163,7 +158,6 @@ trait CustomerTrait
      * Set two-factor auth type.
      *
      * @param TwoFactorAuthType|null $twoFactorAuthType
-     *
      */
     public function setTwoFactorAuthType(TwoFactorAuthType $twoFactorAuthType = null)
     {

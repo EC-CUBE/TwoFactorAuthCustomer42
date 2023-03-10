@@ -1,21 +1,35 @@
 <?php
 
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Plugin\TwoFactorAuthCustomer42\Controller;
 
 use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Repository\CustomerRepository;
-use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthTypeCustomer;
-use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthSmsTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthPhoneNumberTypeCustomer;
+use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthSmsTypeCustomer;
+use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
-
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use Twilio\Rest\Api\V2010\Account\MessageInstance;
 
 class TwoFactorAuthCustomerController extends AbstractController
 {
@@ -30,9 +44,9 @@ class TwoFactorAuthCustomerController extends AbstractController
     protected $customerRepository;
 
     /**
-     * @var EncoderFactoryInterface
+     * @var PasswordHasherFactoryInterface
      */
-    protected $encoderFactory;
+    protected $hashFactory;
 
     /**
      * @var CustomerTwoFactorAuthService
@@ -47,20 +61,19 @@ class TwoFactorAuthCustomerController extends AbstractController
     /**
      * TwoFactorAuthCustomerController constructor.
      *
-     * @param EncoderFactoryInterface $encoderFactory,
      * @param CustomerRepository $customerRepository,
      * @param TokenStorageInterface $tokenStorage,
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService,
      * @param \Twig_Environment       $twig
      */
     public function __construct(
-        EncoderFactoryInterface $encoderFactory,
+        PasswordHasherFactoryInterface $hashFactory,
         CustomerRepository $customerRepository,
         TokenStorageInterface $tokenStorage,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         \Twig_Environment $twig
         ) {
-        $this->encoderFactory = $encoderFactory;
+        $this->hashFactory = $hashFactory;
         $this->customerRepository = $customerRepository;
         $this->tokenStorage = $tokenStorage;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
@@ -69,6 +82,7 @@ class TwoFactorAuthCustomerController extends AbstractController
 
     /**
      * (デバイス認証時)デバイス認証 送信先入力画面.
+     *
      * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/send.twig")
      */
@@ -110,6 +124,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                         ['secret_key' => $secret_key]
                     )
                 );
+
                 return $response;
             } else {
                 $error = trans('front.2fa.sms.send.failure_message');
@@ -126,6 +141,7 @@ class TwoFactorAuthCustomerController extends AbstractController
 
     /**
      * (デバイス認証時)デバイス認証ワンタイムトークン入力画面.
+     *
      * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/input.twig")
      */
@@ -155,7 +171,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                     $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
                     // ワンタイムトークン一致
                     // デバイス認証完了
-                    if($Customer->getDeviceAuthedPhoneNumber() === $phoneNumber) {
+                    if ($Customer->getDeviceAuthedPhoneNumber() === $phoneNumber) {
                         // 既に認証済みの電話番号の場合は、更新しない
                         $response = new RedirectResponse(
                             $this->generateUrl(
@@ -163,6 +179,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                                 ['secret_key' => $secret_key]
                             )
                         );
+
                         return $response;
                     }
 
@@ -180,6 +197,7 @@ class TwoFactorAuthCustomerController extends AbstractController
                             ['secret_key' => $secret_key]
                         )
                     );
+
                     return $response;
                 }
             } else {
@@ -197,6 +215,7 @@ class TwoFactorAuthCustomerController extends AbstractController
 
     /**
      * (ログイン時)二段階認証設定（選択）画面.
+     *
      * @Route("/two_factor_auth/select_type", name="plg_customer_2fa_auth_type_select", methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/tfa/select_type.twig")
      */
@@ -250,6 +269,7 @@ class TwoFactorAuthCustomerController extends AbstractController
         if ($Customer != null && $Customer->isDeviceAuthed()) {
             return true;
         }
+
         return false;
     }
 
@@ -265,36 +285,73 @@ class TwoFactorAuthCustomerController extends AbstractController
         if ($Customer != null && !$this->customerTwoFactorAuthService->isAuthed($Customer, $this->getCallbackRoute())) {
             return false;
         }
+
         return true;
     }
 
     /**
      * コールバックルートの取得.
+     *
      * @return string
      */
-    protected function getCallbackRoute():string
+    protected function getCallbackRoute(): string
     {
         $route = $this->session->get(CustomerTwoFactorAuthService::SESSION_CALL_BACK_URL);
+
         return ($route != null) ? $route : 'mypage';
+    }
+
+    protected function generateOneTimeToken(): string
+    {
+        $token = '';
+        for ($i = 0; $i < 6; $i++) {
+            $token .= (string) random_int(0, 9);
+        }
+
+        return $token;
+    }
+
+    protected function hashOneTimeToken($token): string
+    {
+        // ハッシュジェネレーターをエンティティに持って来る
+        return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
+    }
+
+    /***
+     * @param string $input
+     * @return string
+     */
+    protected function readOneTimeToken(string $input): string
+    {
+        $passwordEncoder = $this->hashFactory->getPasswordHasher(Customer::class);
+
+        return $passwordEncoder->hash($input);
     }
 
     /**
      * デバイス認証用のワンタイムトークンを送信.
      *
-     * @param \Eccube\Entity\Customer $Customer
+     * @param Customer $Customer
      * @param string $phoneNumber
      *
+     * @return MessageInstance
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     private function sendDeviceToken($Customer, $phoneNumber)
     {
         // ワンタイムトークン生成・保存
-        $token = $Customer->createDeviceAuthOneTimeToken();
+        $token = $this->generateOneTimeToken();
+        $Customer->createDeviceAuthOneTimeToken($this->hashOneTimeToken($token));
+
         $this->entityManager->persist($Customer);
         $this->entityManager->flush();
 
         // ワンタイムトークン送信メッセージをレンダリング
         $twig = 'TwoFactorAuthCustomer42/Resource/template/default/sms/onetime_message.twig';
-        $body = $this->twig->render($twig , [
+        $body = $this->twig->render($twig, [
             'Customer' => $Customer,
             'token' => $token,
         ]);
@@ -308,12 +365,15 @@ class TwoFactorAuthCustomerController extends AbstractController
      *
      * @return boolean
      */
-    private function checkDeviceToken($Customer, $token)
+    private function checkDeviceToken($Customer, $token): bool
     {
         $now = new \DateTime();
-        if ($Customer->getDeviceAuthOneTimeToken() !== $token || $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
+
+        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
+        if ($Customer->getDeviceAuthOneTimeToken() !== $this->readOneTimeToken($token) || $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
             return false;
         }
+
         return true;
     }
 }
