@@ -12,7 +12,6 @@ use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
-use function Symfony\Component\Translation\t;
 
 class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
 {

@@ -237,10 +237,11 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * 多要素認証.
      *
      * @param mixed $event
-     *
+     * @param Customer $Customer
+     * @param string $route
+     * @param string $uri
      * @return mixed
      *
-     * @throws HttpException\NotFoundHttpException
      */
     private function multifactorAuth($event, $Customer, $route, $uri)
     {
@@ -259,7 +260,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 
         if (!$is_auth) {
             log_info('[2段階認証] 実施');
-            if (!$Customer->isTwoFactorAuth()) {
+            if ($Customer->getTwoFactorAuthType() === null) {
                 // 2段階認証未設定
                 $this->selectAuthType($event, $Customer, $route);
             } else {
