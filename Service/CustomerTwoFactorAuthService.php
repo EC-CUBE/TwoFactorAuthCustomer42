@@ -213,7 +213,7 @@ class CustomerTwoFactorAuthService
      */
     public function isAuthed($Customer, $route = null)
     {
-        if (!$Customer->isTwoFactorAuth()) {
+        if (!$Customer->getTwoFactorAuthType() === null) {
             return false;
         }
 

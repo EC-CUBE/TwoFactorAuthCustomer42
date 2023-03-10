@@ -15,7 +15,6 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
-use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 
 /**
  * @EntityExtension("Eccube\Entity\Customer")
@@ -49,13 +48,6 @@ trait CustomerTrait
      * @ORM\Column(name="device_authed_phone_number", type="string", length=14, nullable=true)
      */
     private ?string $device_authed_phone_number = null;
-
-    /**
-     * @var boolean
-     *
-     * @ORM\Column(name="two_factor_auth", type="boolean", nullable=false, options={"default":false})
-     */
-    private bool $two_factor_auth = false;
 
     /**
      * TODO: 2FATypeへ
@@ -168,27 +160,10 @@ trait CustomerTrait
     }
 
     /**
-     * @return bool
-     */
-    public function isTwoFactorAuth(): bool
-    {
-        return $this->two_factor_auth;
-    }
-
-    /**
-     * @param bool $two_factor_auth
-     */
-    public function setTwoFactorAuth(bool $two_factor_auth): void
-    {
-        $this->two_factor_auth = $two_factor_auth;
-    }
-
-    /**
-     * Set two factor auth type.
+     * Set two-factor auth type.
      *
-     * @param TwoFactorAuthType|null $sex
+     * @param TwoFactorAuthType|null $twoFactorAuthType
      *
-     * @return Customer
      */
     public function setTwoFactorAuthType(TwoFactorAuthType $twoFactorAuthType = null)
     {

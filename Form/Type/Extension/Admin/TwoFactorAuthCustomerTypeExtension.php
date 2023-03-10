@@ -46,11 +46,7 @@ class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
 
         $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event) {
             $form = $event->getForm();
-            $form->add('two_factor_auth', ToggleSwitchType::class, [
-                'required' => false,
-                'mapped' => true,
-            ])
-            ->add('two_factor_auth_type', EntityType::class, [
+            $form->add('two_factor_auth_type', EntityType::class, [
                 'class' => TwoFactorAuthType::class,
                 'required' => false,
                 'choice_label' => 'name',

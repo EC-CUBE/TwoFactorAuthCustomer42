@@ -222,7 +222,6 @@ class TwoFactorAuthCustomerController extends AbstractController
                 // 選択された2段階認証方式を更新
                 $Customer->setTwoFactorAuthType($TwoFactorAuthType);
                 // 2段階認証を有効に更新
-                $Customer->setTwoFactorAuth(true);
                 $this->entityManager->persist($Customer);
                 $this->entityManager->flush();
                 // 初回認証を実施
