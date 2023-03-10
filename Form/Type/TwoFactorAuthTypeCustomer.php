@@ -13,10 +13,11 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type;
 
+use Doctrine\ORM\EntityRepository;
 use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 
 class TwoFactorAuthTypeCustomer extends AbstractType
 {
@@ -30,10 +31,15 @@ class TwoFactorAuthTypeCustomer extends AbstractType
                 'label' => 'front.setting.system.two_factor_auth.type',
                 'class' => TwoFactorAuthType::class,
                 'required' => true,
+                'query_builder' => function (EntityRepository $er) {
+                    return $er->createQueryBuilder('tfat')
+                        ->where('tfat.isDisabled = :id')
+                        ->setParameter('id', false);
+                },
                 'choice_label' => 'name',
                 'mapped' => true,
             ])
-            ;
+        ;
     }
 
     /**
