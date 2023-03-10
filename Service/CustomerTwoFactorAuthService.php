@@ -13,15 +13,17 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Service;
 
-use Psr\Container\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
 use Eccube\Repository\BaseInfoRepository;
+use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
+use Psr\Container\ContainerInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
-use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 
 class CustomerTwoFactorAuthService
 {
@@ -143,7 +145,8 @@ class CustomerTwoFactorAuthService
     /**
      * @return array
      */
-    public function getDefaultAuthRoutes() {
+    public function getDefaultAuthRoutes()
+    {
         return $this->default_tfa_routes;
     }
 
@@ -169,12 +172,12 @@ class CustomerTwoFactorAuthService
      * @param TwoFactorAuthConfigRepository     $twoFactorAuthConfigRepository
      */
     public function __construct(
-        EntityManagerInterface  $entityManager,
-        EccubeConfig            $eccubeConfig,
+        EntityManagerInterface $entityManager,
+        EccubeConfig $eccubeConfig,
         EncoderFactoryInterface $encoderFactory,
-        RequestStack            $requestStack,
-        BaseInfoRepository      $baseInfoRepository,
-        TwoFactorAuthConfigRepository     $twoFactorAuthConfigRepository
+        RequestStack $requestStack,
+        BaseInfoRepository $baseInfoRepository,
+        TwoFactorAuthConfigRepository $twoFactorAuthConfigRepository
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -193,12 +196,12 @@ class CustomerTwoFactorAuthService
         }
         $expire = $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
         if ($expire || $expire === '0') {
-            $this->expire = (int)$expire;
+            $this->expire = (int) $expire;
         }
 
         $route_expire = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
         if ($route_expire || $route_expire === '0') {
-            $this->route_expire = (int)$route_expire;
+            $this->route_expire = (int) $route_expire;
         }
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
@@ -221,17 +224,17 @@ class CustomerTwoFactorAuthService
         $expire = $this->expire;
         if ($route != null) {
             $includeRouts = $this->getIncludeRoutes();
-            if ((in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage'))) {
-                $cookieName = $this->routeCookieName . '_' . $route;
+            if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
+                $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
             } else {
                 $cookieName = $this->cookieName;
             }
         }
 
-        if (($json = $this->request->cookies->get($cookieName))) {
+        if ($json = $this->request->cookies->get($cookieName)) {
             $configs = json_decode($json);
-            $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getSecretKey(), $Customer->getSalt());
+            $encodedString = $this->encoder->encodePassword($Customer->getId().$Customer->getSecretKey(), $Customer->getSalt());
             if (
                 $configs
                 && isset($configs->{$Customer->getId()})
@@ -240,7 +243,7 @@ class CustomerTwoFactorAuthService
                 && $config->key === $encodedString
                 && (
                     $this->expire == 0
-                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $expire))))
+                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-'.$expire))))
                 )
             ) {
                 return true;
@@ -259,14 +262,14 @@ class CustomerTwoFactorAuthService
      */
     public function createAuthedCookie($Customer, $route = null)
     {
-        $encodedString = $this->encoder->encodePassword($Customer->getId() . $Customer->getSecretKey(), $Customer->getSalt());
+        $encodedString = $this->encoder->encodePassword($Customer->getId().$Customer->getSecretKey(), $Customer->getSalt());
 
         $cookieName = $this->cookieName;
         $expire = $this->expire;
         if ($route != null) {
             $includeRouts = $this->getIncludeRoutes();
-            if ((in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage'))) {
-                $cookieName = $this->routeCookieName . '_' . $route;
+            if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
+                $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
             } else {
                 $cookieName = $this->cookieName;
@@ -274,7 +277,7 @@ class CustomerTwoFactorAuthService
         }
 
         $configs = json_decode('{}');
-        if (($json = $this->request->cookies->get($cookieName))) {
+        if ($json = $this->request->cookies->get($cookieName)) {
             $configs = json_decode($json);
         }
         $configs->{$Customer->getId()} = [
@@ -285,13 +288,13 @@ class CustomerTwoFactorAuthService
         $cookie = new Cookie(
             $cookieName, // name
             json_encode($configs), // value
-            ($expire == 0 ? 0 : time() + $expire), // expire
+            $expire == 0 ? 0 : time() + $expire, // expire
             $this->request->getBasePath(), // path
             null, // domain
-            ($this->eccubeConfig->get('eccube_force_ssl') ? true : false), // secure
+            $this->eccubeConfig->get('eccube_force_ssl') ? true : false, // secure
             true, // httpOnly
             false, // raw
-            ($this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null) // sameSite
+            $this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null // sameSite
         );
 
         return $cookie;
@@ -311,7 +314,6 @@ class CustomerTwoFactorAuthService
      * SMSで顧客電話番号へメッセージを送信.
      *
      * @param \Eccube\Entity\Customer $Customer
-     *
      */
     public function sendBySms($Customer, $phoneNumber, $body)
     {
@@ -322,11 +324,11 @@ class CustomerTwoFactorAuthService
         );
         // SMS送信(現在国内電話番号のみ対象)
         $message = $twilio->messages
-                    ->create('+81' . $phoneNumber,
-                        array(
-                            "from" => $this->twoFactorAuthConfig->getFromPhonenumber(),
-                            "body" => $body
-                        )
+                    ->create('+81'.$phoneNumber,
+                        [
+                            'from' => $this->twoFactorAuthConfig->getFromPhonenumber(),
+                            'body' => $body,
+                        ]
                     );
 
         return $message;
@@ -334,15 +336,17 @@ class CustomerTwoFactorAuthService
 
     /**
      * 要認証ルートを取得.
+     *
      * @return array
      */
-    public function getIncludeRoutes() : array
+    public function getIncludeRoutes(): array
     {
         $routes = [];
         $include = $this->twoFactorAuthConfig->getIncludeRoutes();
         if ($include) {
             $routes = preg_split('/\R/', $include);
         }
+
         return $routes;
     }
 
@@ -351,14 +355,46 @@ class CustomerTwoFactorAuthService
      *
      * @return array
      */
-    public function getExcludeRoutes() : array
+    public function getExcludeRoutes(): array
     {
         $routes = [];
         $include = $this->twoFactorAuthConfig->getExcludeRoutes();
         if ($include) {
             $routes = preg_split('/\R/', $include);
         }
+
         return $routes;
     }
-}
 
+    /**
+     * ２段階認証に関係しているクッキーだけを消す
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
+    public function clear2AuthCookies(Request $request, Response $response)
+    {
+        foreach ($request->cookies->all() as $key => $cookie) {
+            if (
+                $this->str_contains($key, self::DEFAULT_COOKIE_NAME) ||
+                $this->str_contains($key, self::ROUTE_COOKIE_NAME)
+            ) {
+                // クッキーを消す
+                $response->headers->clearCookie($key);
+            }
+        }
+    }
+
+    /***
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     *
+     * @deprecated ECCUBEの最低PHPバージョンは8.0になったら, この関数を消してphp8.0からのstr_containsを利用する
+     */
+    private function str_contains(string $haystack, string $needle)
+    {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+    }
+}

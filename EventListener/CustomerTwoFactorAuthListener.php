@@ -27,10 +27,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
-use Symfony\Component\HttpKernel\Exception as HttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
+use Symfony\Component\Security\Http\Event\LogoutEvent;
 
 class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 {
@@ -103,6 +103,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * 重要操作ルート.
      */
     protected $include_routes;
+
     /**
      * @param EntityManagerInterface $entityManager
      * @param EccubeConfig $eccubeConfig
@@ -149,6 +150,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         return [
             KernelEvents::CONTROLLER_ARGUMENTS => ['onKernelController', 7],
             LoginSuccessEvent::class => ['onLoginSuccess'],
+            LogoutEvent::class => 'logoutEvent',
         ];
     }
 
@@ -234,14 +236,25 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     }
 
     /**
+     * ログアウトする前に全ての2FA認証クッキーを消す
+     *
+     * @param LogoutEvent $logoutEvent ログアウトイベント
+     * @return void
+     */
+    public function logoutEvent(LogoutEvent $logoutEvent)
+    {
+        $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
+    }
+
+    /**
      * 多要素認証.
      *
      * @param mixed $event
      * @param Customer $Customer
      * @param string $route
      * @param string $uri
-     * @return mixed
      *
+     * @return mixed
      */
     private function multifactorAuth($event, $Customer, $route, $uri)
     {
