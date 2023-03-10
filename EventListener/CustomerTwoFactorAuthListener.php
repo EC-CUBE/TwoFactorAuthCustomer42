@@ -95,10 +95,14 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $exclude_routes;
 
     /**
-     * 個別認証ルート.
+     * 通常（ログイン・マイページ）ルート.
+     */
+    protected $default_routes;
+
+    /**
+     * 重要操作ルート.
      */
     protected $include_routes;
-
     /**
      * @param EntityManagerInterface $entityManager
      * @param EccubeConfig $eccubeConfig
@@ -133,10 +137,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->session = $session;
 
         $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
-        $this->include_routes = array_merge(
-            $this->customerTwoFactorAuthService->getIncludeRoutes(),
-            $this->customerTwoFactorAuthService->getDefaultAuthRoutes()
-        );
+        $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
+        $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
     }
 
     /**
@@ -183,7 +185,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                 return;
             }
 
-            if (!$this->isIncludeRoute($route, $uri)) {
+            if (!$this->isDefaultRoute($route, $uri) && !$this->isIncludeRoute($route, $uri)) {
                 // 重要操作指定ではなく、マイページ系列ではない場合、処理なし
                 return;
             }
@@ -242,6 +244,11 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     {
         if (!$this->baseInfo->isTwoFactorAuthUse()) {
             // MFA無効の場合処理なし
+            return;
+        }
+
+        if (count($this->twoFactorAuthTypeRepository->findBy(['isDisabled' => false])) == 0) {
+            // 2段階認証プラグインが有効化されていない場合処理なし
             return;
         }
 
@@ -343,15 +350,42 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      *
      * @return bool
      */
+    private function isDefaultRoute(string $route, string $uri): bool
+    {
+        return $this->isTargetRoute($this->default_routes, $route, $uri);
+    }
+
+    /**
+     * ルート・URIが個別認証対象かチェック.
+     *
+     * @param string $route
+     * @param string $uri
+     *
+     * @return bool
+     */
     private function isIncludeRoute(string $route, string $uri): bool
     {
+        return $this->isTargetRoute($this->include_routes, $route, $uri);
+    }
+
+    /**
+     * ルート・URIが対象であるかチェック.
+     *
+     * @param array $targetRoutes
+     * @param string $route
+     * @param string $uri
+     *
+     * @return bool
+     */
+    private function isTargetRoute($targetRoutes, string $route, string $uri): bool
+    {
         // ルートで認証
-        if (in_array($route, $this->include_routes)) {
+        if (in_array($route, $targetRoutes)) {
             return true;
         }
 
         // URIで認証
-        foreach ($this->include_routes as $r) {
+        foreach ($targetRoutes as $r) {
             if ($r != '' && $r !== '/' && strpos($uri, $r) === 0) {
                 return true;
             }

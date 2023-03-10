@@ -132,6 +132,10 @@ class CustomerTwoFactorAuthService
         'mypage_login',
         'mypage',
         'mypage_order',
+        'mypage_favorite',
+        'mypage_change',
+        'mypage_delivery',
+        'mypage_withdraw',
         'shopping',
         'shopping_login',
     ];
@@ -216,11 +220,12 @@ class CustomerTwoFactorAuthService
         $cookieName = $this->cookieName;
         $expire = $this->expire;
         if ($route != null) {
-            if (in_array($route, $this->default_tfa_routes)) {
-                $cookieName = $this->cookieName;
-            } else {
+            $includeRouts = $this->getIncludeRoutes();
+            if ((in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage'))) {
                 $cookieName = $this->routeCookieName . '_' . $route;
                 $expire = $this->route_expire;
+            } else {
+                $cookieName = $this->cookieName;
             }
         }
 
@@ -259,11 +264,12 @@ class CustomerTwoFactorAuthService
         $cookieName = $this->cookieName;
         $expire = $this->expire;
         if ($route != null) {
-            if (in_array($route, $this->default_tfa_routes)) {
-                $cookieName = $this->cookieName;
-            } else {
+            $includeRouts = $this->getIncludeRoutes();
+            if ((in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage'))) {
                 $cookieName = $this->routeCookieName . '_' . $route;
                 $expire = $this->route_expire;
+            } else {
+                $cookieName = $this->cookieName;
             }
         }
 
@@ -287,11 +293,6 @@ class CustomerTwoFactorAuthService
             false, // raw
             ($this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null) // sameSite
         );
-
-        if ($route == null && !$this->isAuthed($Customer)) {
-            // 直リンクで重要操作ルートを指定された場合、ログイン認証済みCookieが存在しない為、このタイミングで生成する
-            $login_cookie = $this->createAuthedCookie($Customer, 'mypage');
-        }
 
         return $cookie;
     }
