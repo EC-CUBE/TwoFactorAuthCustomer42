@@ -36,11 +36,10 @@ class TwoFactorAuthConfigRepository extends AbstractRepository
     }
 
     /**
-     *
      * @return $result
      */
     public function findOne()
     {
-        return $this->findOneBy(array(), array('id' => 'DESC'));
+        return $this->findOneBy([], ['id' => 'DESC']);
     }
 }

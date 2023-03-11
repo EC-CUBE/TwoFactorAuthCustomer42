@@ -11,7 +11,7 @@ eccube:
       limit: 5
       # インターバルを設定します。
       interval: '30 minutes'
-      
+
 parameters:
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME): 'plugin_eccube_customer_2fa'
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_SMS_SEND_COOKIE_NAME): 'plugin_eccube_customer_2fa_sms'
@@ -19,8 +19,10 @@ parameters:
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE): '3600'
   env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME): 'plugin_eccube_route_customer_2fa'
   env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE): '3600'
+  env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH): '64'
 
   plugin_eccube_2fa_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME)%'
   plugin_eccube_2fa_route_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME)%'
   plugin_eccube_2fa_customer_expire: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE)%'
   plugin_eccube_2fa_route_customer_expire: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE)%'
+  plugin_eccube_2fa_route_cookie_value_character_length: '%env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH)%'

@@ -13,6 +13,7 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
 
@@ -68,6 +69,13 @@ trait CustomerTrait
      * })
      */
     private $TwoFactorAuthType = null;
+
+    /**
+     * @var Collection
+     *
+     * @ORM\OneToMany(targetEntity="\Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie", mappedBy="Customer")
+     */
+    private $TwoFactorAuthCustomerCookies;
 
     /**
      * @param string $hashedOneTimePassword
@@ -174,5 +182,21 @@ trait CustomerTrait
     public function getTwoFactorAuthType()
     {
         return $this->TwoFactorAuthType;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getTwoFactorAuthCustomerCookies(): Collection
+    {
+        return $this->TwoFactorAuthCustomerCookies;
+    }
+
+    /**
+     * @param Collection $TwoFactorAuthCustomerCookies
+     */
+    public function setTwoFactorAuthCustomerCookies(Collection $TwoFactorAuthCustomerCookies): void
+    {
+        $this->TwoFactorAuthCustomerCookies = $TwoFactorAuthCustomerCookies;
     }
 }

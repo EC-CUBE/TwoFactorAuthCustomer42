@@ -15,7 +15,6 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Entity\AbstractEntity;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
@@ -216,7 +215,7 @@ class TwoFactorAuthConfig extends AbstractEntity
         $routes = $this->getRoutes($this->getIncludeRoutes());
 
         if (!in_array($route, $routes)) {
-            $this->setIncludeRoutes($this->include_routes . PHP_EOL . $route);
+            $this->setIncludeRoutes($this->include_routes.PHP_EOL.$route);
         }
 
         return $this;
@@ -239,7 +238,7 @@ class TwoFactorAuthConfig extends AbstractEntity
         $routes = $this->getRoutes($this->getExcludeRoutes());
 
         if (!in_array($route, $routes)) {
-            $this->setExcludeRoutes($this->exclude_routes . PHP_EOL . $route);
+            $this->setExcludeRoutes($this->exclude_routes.PHP_EOL.$route);
         }
 
         return $this;
@@ -262,6 +261,7 @@ class TwoFactorAuthConfig extends AbstractEntity
         if (!$routes) {
             return [];
         }
+
         return explode(PHP_EOL, $routes);
     }
 
@@ -269,5 +269,4 @@ class TwoFactorAuthConfig extends AbstractEntity
     {
         return implode(PHP_EOL, $routes);
     }
-
 }
