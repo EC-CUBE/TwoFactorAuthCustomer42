@@ -25,7 +25,7 @@ trait CustomerTrait
     /**
      * @var ?string
      *
-     * @ORM\Column(name="device_auth_one_time_token", type="string", length=10, nullable=true)
+     * @ORM\Column(name="device_auth_one_time_token", type="string", length=255, nullable=true)
      */
     private ?string $device_auth_one_time_token = null;
 
