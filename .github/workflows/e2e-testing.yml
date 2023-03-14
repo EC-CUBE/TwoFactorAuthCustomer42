@@ -77,10 +77,14 @@ jobs:
           path: app/Plugin/TwoFactorAuthCustomer42
 
       - name: Install Plugin
+        env:
+          APP_ENV: ${{ matrix.app_env }}
+          DATABASE_URL: ${{ matrix.database_url }}
+          DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
         run: |
-          bin/console eccube:plugin:install --env=dev --code=TwoFactorAuthCustomer42
-          bin/console cache:clear --env=dev
-          bin/console eccube:plugin:enable --env=dev --code=TwoFactorAuthCustomer42
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
 
       - name: setup-chromedriver
         uses: nanasess/setup-chromedriver@master
