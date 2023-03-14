@@ -299,6 +299,9 @@ jobs:
       - name: Enquire ECCUBE
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
       - name: Get ECCUBE Logs
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
