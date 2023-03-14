@@ -296,6 +296,12 @@ jobs:
       - name: Sleep for MySQL
         run: sleep 240s
         shell: bash
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
       - name: Install Plugin
         run: |
           docker-compose exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
