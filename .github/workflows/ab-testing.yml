@@ -14,7 +14,7 @@ jobs:
       - name: Checkout 4.2 Branch (POSTGRES) PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -143,7 +143,7 @@ jobs:
       - name: Checkout POSTGRES NO PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -240,7 +240,7 @@ jobs:
       - name: Checkout 4.2 Branch (MYSQL) PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
@@ -368,7 +368,7 @@ jobs:
       - name: Checkout 4.2 Branch (MYSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
@@ -496,7 +496,7 @@ jobs:
       - name: Checkout 4.2 Branch (POSTGRES) PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download Plugin
         uses: actions/checkout@master
         with:
@@ -601,7 +601,7 @@ jobs:
       - name: Checkout 4.2 Branch (PGSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Setup to EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
@@ -673,7 +673,7 @@ jobs:
       - name: Checkout 4.2 Branch (MYSQL) PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Download Plugin
         uses: actions/checkout@master
         with:
@@ -776,7 +776,7 @@ jobs:
       - name: Checkout 4.2 Branch (MYSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          name: ${{ github.repository_owner }}/ec-cube
+          repository: ${{ github.repository_owner }}/ec-cube
       - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
