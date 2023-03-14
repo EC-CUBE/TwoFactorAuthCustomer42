@@ -71,12 +71,21 @@ jobs:
           bin/console doctrine:database:create --env=dev
           bin/console doctrine:schema:create --env=dev
           bin/console eccube:fixtures:load --env=dev
-      - name: Download Plugin
+      - name: Download Plugin TwoFactorAuthCustomer42
         uses: actions/checkout@master
         with:
           path: app/Plugin/TwoFactorAuthCustomer42
-
-      - name: Install Plugin
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Install Plugins
         env:
           APP_ENV: ${{ matrix.app_env }}
           DATABASE_URL: ${{ matrix.database_url }}
@@ -85,6 +94,16 @@ jobs:
           bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
           bin/console cache:clear
           bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
 
       - name: setup-chromedriver
         uses: nanasess/setup-chromedriver@master
