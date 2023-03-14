@@ -78,9 +78,9 @@ jobs:
 
       - name: Install Plugin
         run: |
-          bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
-          bin/console cache:clear
-          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console eccube:plugin:install --env=dev --code=TwoFactorAuthCustomer42
+          bin/console cache:clear --env=dev
+          bin/console eccube:plugin:enable --env=dev --code=TwoFactorAuthCustomer42
 
       - name: setup-chromedriver
         uses: nanasess/setup-chromedriver@master
