@@ -294,8 +294,37 @@ jobs:
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
       - name: Sleep for MySQL
-        run: sleep 240s
+        run: sleep 120s
         shell: bash
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
+      - name: Sleep for MySQL
+        run: sleep 60s
+        shell: bash
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
       - name: Enquire ECCUBE
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
