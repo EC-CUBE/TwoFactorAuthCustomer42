@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # POSTGRES SQL
-      ## 4.1
-      - name: Checkout 4.2 Branch (POSTGRES)
+      # 10,000 PRODUCTS
+      # PLUGIN
+      - name: Checkout 4.2 Branch (POSTGRES) PLUGIN
         uses: actions/checkout@master
         with:
           name: ${{ github.repository_owner }}/ec-cube
-          ref: "4.2"
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -41,9 +41,42 @@ jobs:
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.bench.pgsql.yml up -d
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.bench.pgsql.yml up -d
       - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
         run: sleep 120s
         shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose exec ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose exec ec-cube bin/console cache:clear
+          docker-compose exec ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
       - name: Request home page - Postgres 4.2 10000 PRODUCTS
         run: |
           sudo apt-get install apache2-utils
@@ -104,11 +137,13 @@ jobs:
       - name: Drop PGSQL ECCUBE for 4.2
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.pgsql.yml down -v
-      ## 4.2
-      - name: Checkout 4.2.1-20230116 Branch (POSTGRES)
+      # POSTGRES SQL
+      # 10,000 PRODUCTS
+      # NO PLUGIN
+      - name: Checkout POSTGRES NO PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2.1-20230116"
+          name: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -199,12 +234,13 @@ jobs:
       - name: Drop PGSQL ECCUBE for 4.2.1-20230116
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.pgsql.yml down -v
-      ## MYSQL
-      # 4.1
-      - name: Checkout 4.2 Branch (MYSQL)
+      # MYSQL SQL
+      # 10,000 PRODUCTS
+      # PLUGIN
+      - name: Checkout 4.2 Branch (MYSQL) PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2"
+          name: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
@@ -227,13 +263,42 @@ jobs:
           else
             echo ".github/workflows/mysql/Dockerfile File found!"
           fi
-      - name: Start Load EC-CUBE on 4.2
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml up -d
       - name: Sleep for MySQL
         run: sleep 240s
         shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose exec ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose exec ec-cube bin/console cache:clear
+          docker-compose exec ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
       - name: Restart Load EC-CUBE to wait for MySQL
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml up -d
@@ -297,11 +362,13 @@ jobs:
       - name: Drop MYSQL ECCUBE for 4.2
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml down -v
-      # 4.2
-      - name: Checkout 4.2.1-20230116 Branch  (MYSQL)
+      # MYSQL SQL
+      # 10,000 PRODUCTS
+      # NO PLUGIN
+      - name: Checkout 4.2 Branch (MYSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2.1-20230116"
+          name: ${{ github.repository_owner }}/ec-cube
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
@@ -324,13 +391,42 @@ jobs:
           else
             echo ".github/workflows/mysql/Dockerfile File found!"
           fi
-      - name: Start Load MySQL Only 4.2.1-20230116
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml up -d
       - name: Sleep for MySQL
         run: sleep 120s
         shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose exec ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose exec ec-cube bin/console cache:clear
+          docker-compose exec ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
       - name: Restart Load EC-CUBE to wait for MySQL
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml up -d
@@ -394,14 +490,49 @@ jobs:
       - name: Drop MYSQL ECCUBE for 4.2.1-20230116
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.bench.mysql.yml down -v
-      - name: Checkout 4.2 Branch (POSTGRES)
+      # POSTGRES SQL
+      # BASE PRODUCTS
+      # PLUGIN
+      - name: Checkout 4.2 Branch (POSTGRES) PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2"
-      - name: Setup to EC-CUBE
+          name: ${{ github.repository_owner }}/ec-cube
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker compose -f docker-compose.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose exec ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose exec ec-cube bin/console cache:clear
+          docker-compose exec ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
       - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
         run: sleep 60s
       - name: Request home page - Postgres 4.2 BASE INSTALL
@@ -464,17 +595,20 @@ jobs:
       - name: Drop PGSQL ECCUBE for 4.2
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.pgsql.yml down -v
-      - name: Checkout 4.2.1-20230116 Branch (POSTGRES)
+      # PGSQL
+      # BASE PRODUCTS
+      # NO PLUGIN
+      - name: Checkout 4.2 Branch (PGSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2.1-20230116"
+          name: ${{ github.repository_owner }}/ec-cube
       - name: Setup to EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker compose -f docker-compose.yml -f docker-compose.pgsql.yml up -d --wait
       - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
         run: sleep 120s
-      - name: Request home page - Postgres 4.2.1-20230116 BASE INSTALL
+      - name: Request home page - Postgres BASE INSTALL
         run: |
           sudo apt-get install apache2-utils
           wget -q -O visible_home_html.html http://localhost:8080
@@ -502,7 +636,7 @@ jobs:
           echo "REQUESTS PER SECOND AVG: ${PSQL_42_BASE_HOME_RPS_RESULT}"
            echo "PSQL_42_BASE_HOME_RESULT=${PSQL_42_BASE_HOME_RESULT}" >> $GITHUB_ENV
            echo "PSQL_42_BASE_HOME_RPS_RESULT=${PSQL_42_BASE_HOME_RPS_RESULT}" >> $GITHUB_ENV
-      - name: Request list page - Postgres 4.2.1-20230116 BASE INSTALL
+      - name: Request list page - Postgres BASE INSTALL
         run: |
           sudo apt-get install apache2-utils
           wget -q -O visible_list_html.html http://localhost:8080/products/list
@@ -533,14 +667,49 @@ jobs:
       - name: Drop PGSQL ECCUBE for 4.2.1-20230116
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.pgsql.yml down -v
-      - name: Checkout 4.2 Branch (MYSQL)
+      # MYSQL
+      # BASE PRODUCTS
+      # PLUGIN
+      - name: Checkout 4.2 Branch (MYSQL) PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2"
-      - name: Start Load EC-CUBE on 4.2
+          name: ${{ github.repository_owner }}/ec-cube
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose exec ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose exec ec-cube bin/console cache:clear
+          docker-compose exec ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          bin/console cache:clear
+
+          bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          bin/console cache:clear
+          bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
       - name: Wait for 30 seconds for the database to load, (because MySQL is slow to initialize)
         run: sleep 30s
         shell: bash
@@ -601,12 +770,14 @@ jobs:
       - name: Drop MYSQL ECCUBE for 4.2
         run: |
           docker-compose -f docker-compose.yml -f docker-compose.mysql.yml down -v
-      # 4.2
-      - name: Checkout 4.2.1-20230116 Branch  (MYSQL)
+      # MYSQL
+      # BASE PRODUCTS
+      # NO PLUGIN
+      - name: Checkout 4.2 Branch (MYSQL) NO PLUGIN
         uses: actions/checkout@master
         with:
-          ref: "4.2.1-20230116"
-      - name: Start Load EC-CUBE on 4.2.1-20230116
+          name: ${{ github.repository_owner }}/ec-cube
+      - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up -d
