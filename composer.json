@@ -1,13 +1,13 @@
 {
-  "name": "ec-cube/two-factor-auth-customer-plugin",
-  "version": "4.2.0",
+  "name": "ec-cube/twofactorauthcustomer42",
+  "version": "1.0.0",
   "description": "2 factor authentication for Customers EC-CUBE42",
   "type": "eccube-plugin",
   "extra": {
     "code": "TwoFactorAuthCustomer42"
   },
   "require": {
-    "ec-cube/plugin-installer": "~0.0.7 || ^2.0",
+    "ec-cube/plugin-installer": "^2.0",
     "twilio/sdk": "^6.43"
   }
 }
