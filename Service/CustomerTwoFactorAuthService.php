@@ -32,26 +32,6 @@ use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 class CustomerTwoFactorAuthService
 {
     /**
-     * @var int デフォルトの認証の有効時間
-     */
-    public const DEFAULT_EXPIRE_TIME = 3600;
-
-    /**
-     * @var int ルート認証の有効時間
-     */
-    public const ROUTE_EXPIRE_TIME = 3600;
-
-    /**
-     * @var string Cookieに保存する時のキー名
-     */
-    public const DEFAULT_COOKIE_NAME = 'plugin_eccube_customer_2fa';
-
-    /**
-     * @var string ルート認証Cookieに保存する時のキー名
-     */
-    public const ROUTE_COOKIE_NAME = 'plugin_eccube_route_customer_2fa';
-
-    /**
      * @var string 認証電話番号を保存する時のキー名
      */
     public const SESSION_AUTHED_PHONE_NUMBER = 'plugin_eccube_customer_2fa_authed_phone_number';
@@ -99,21 +79,21 @@ class CustomerTwoFactorAuthService
     /**
      * @var string
      */
-    protected $cookieName = self::DEFAULT_COOKIE_NAME;
+    protected $cookieName;
     /**
      * @var string
      */
-    protected $routeCookieName = self::ROUTE_COOKIE_NAME;
+    protected $routeCookieName;
 
     /**
      * @var int
      */
-    protected $expire = self::DEFAULT_EXPIRE_TIME;
+    protected $expire;
 
     /**
      * @var int
      */
-    protected $route_expire = self::ROUTE_EXPIRE_TIME;
+    protected $route_expire;
 
     /**
      * @var TwoFactorAuth
@@ -200,21 +180,11 @@ class CustomerTwoFactorAuthService
         $this->tfa = new TwoFactorAuth();
         $this->baseInfo = $baseInfoRepository->find(1);
 
-        if ($this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name')) {
-            $this->cookieName = $this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name');
-        }
-        if ($this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name')) {
-            $this->routeCookieName = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name');
-        }
-        $expire = $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
-        if ($expire || $expire === '0') {
-            $this->expire = (int) $expire;
-        }
+        $this->cookieName = $this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name');
+        $this->routeCookieName = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name');
 
-        $route_expire = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
-        if ($route_expire || $route_expire === '0') {
-            $this->route_expire = (int) $route_expire;
-        }
+        $this->expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
+        $this->route_expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
         $this->twoFactorCustomerCookieRepository = $twoFactorCustomerCookieRepository;
@@ -245,6 +215,7 @@ class CustomerTwoFactorAuthService
                 // デフォルトルーティングの場合、
                 $cookieName = $this->cookieName;
             }
+
             return $this->isRouteAuthed($Customer, $cookieName, $expire);
         }
 
@@ -310,6 +281,7 @@ class CustomerTwoFactorAuthService
                 $expire = $this->route_expire;
             }
         }
+
         return $this->createRouteAuthCookie($Customer, $cookieName, $expire);
     }
 
@@ -422,8 +394,8 @@ class CustomerTwoFactorAuthService
     {
         foreach ($request->cookies->all() as $key => $cookie) {
             if (
-                $this->str_contains($key, self::DEFAULT_COOKIE_NAME) ||
-                $this->str_contains($key, self::ROUTE_COOKIE_NAME)
+                $this->str_contains($key, $this->cookieName) ||
+                $this->str_contains($key, $this->routeCookieName)
             ) {
                 // クッキーを消す
                 $response->headers->clearCookie($key);
