@@ -15,6 +15,10 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
       - name: Download Plugin
         uses: actions/checkout@master
         with:
@@ -29,10 +33,6 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
           path: app/Plugin/TwoFactorAuthCustomerSms42
-      - name: Start Load EC-CUBE
-        run: |
-          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
-          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
       - name: Sleep for MySQL
         run: sleep 120s
         shell: bash
@@ -51,8 +51,8 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
-      - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
-        run: sleep 60s
+      - name: Wait 30s for the database to load, (as I do not know the databases active state)
+        run: sleep 30s
       - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
