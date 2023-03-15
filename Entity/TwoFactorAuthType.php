@@ -49,7 +49,7 @@ class TwoFactorAuthType extends AbstractEntity
     /**
      * @var string
      *
-     * @ORM\Column(name="route", type="string", nullable=true, length=200, unique=true)
+     * @ORM\Column(name="route", type="string", nullable=false, length=200, unique=true)
      */
     private $route = null;
 
