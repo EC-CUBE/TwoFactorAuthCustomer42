@@ -174,7 +174,7 @@ class CustomerPersonalValidationController extends AbstractController
             if ($form->isSubmitted() && $form->isValid()) {
                 // 他のデバイスで既に認証済みの電話番号かチェック
                 $phoneNumber = $form->get('phone_number')->getData();
-                if ($this->customerRepository->findBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
                     // 認証されていない電話番号の場合
                     // 入力電話番号へワンタイムコードを送信
                     $this->sendDeviceToken($Customer, $phoneNumber);
