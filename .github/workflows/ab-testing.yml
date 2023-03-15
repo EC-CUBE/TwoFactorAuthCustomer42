@@ -135,6 +135,9 @@ jobs:
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
         run: sleep 120s
       - name: Start Load EC-CUBE
@@ -211,6 +214,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download Plugin
         uses: actions/checkout@master
         with:
@@ -320,6 +326,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Start Load EC-CUBE
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
@@ -397,6 +406,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -532,6 +544,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/pgsql
@@ -635,6 +650,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
@@ -807,6 +825,9 @@ jobs:
         uses: actions/checkout@master
         with:
           repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download 4.2 Apache Bench Data
         run: |
           mkdir .github/workflows/mysql
