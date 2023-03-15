@@ -19,6 +19,9 @@ jobs:
         run: |
           sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
           docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
       - name: Download Plugin
         uses: actions/checkout@master
         with:
