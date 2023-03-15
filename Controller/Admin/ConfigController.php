@@ -27,11 +27,6 @@ use Symfony\Component\Routing\Annotation\Route;
 class ConfigController extends AbstractController
 {
     /**
-     * @var BaseInfoRepository
-     */
-    protected $baseInfoRepository;
-
-    /**
      * @var TwoFactorAuthConfigRepository
      */
     private $smsConfigRepository;
@@ -39,9 +34,8 @@ class ConfigController extends AbstractController
     /**
      * ConfigController constructor.
      */
-    public function __construct(BaseInfoRepository $baseInfoRepository, TwoFactorAuthConfigRepository $smsConfigRepository)
+    public function __construct(TwoFactorAuthConfigRepository $smsConfigRepository)
     {
-        $this->baseInfoRepository = $baseInfoRepository;
         $this->smsConfigRepository = $smsConfigRepository;
     }
 
