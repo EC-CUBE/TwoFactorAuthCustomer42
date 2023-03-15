@@ -16,23 +16,23 @@ admin.setting.2fa.route.include : 重要操作ルーティング
 admin.setting.2fa.route.exclude : 除外ルーティング
 
 admin.customer.2fa.title: 2段階認証設定
-admin.customer.2fa.device_authed: デバイス認証
-admin.customer.2fa.device_authed_phone_number: デバイス認証済み電話番号
+admin.customer.2fa.device_authed: 本人認証
+admin.customer.2fa.device_authed_phone_number: 本人認証済み電話番号
 admin.customer.2fa.is_2fa_use: 2段階認証の利用
 admin.customer.2fa.type: 2段階認証方式
 admin.customer.2fa.type_option.default: 未設定
 
-front.2fa.entry.complete_title: 本人確認を実施してください
-front.2fa.entry.complete_message__title: メール認証ありがとうございます。
+front.2fa.entry.complete_title: ご本人確認を実施してください
+front.2fa.entry.complete_message__title: 仮登録ありがとうございます。
 front.2fa.entry.complete_message__activated: |
   続いて携帯電話によるご本人様確認をお願いいたします。
   ご本人様確認を頂けない場合、当ショップはご利用できません。
-front.2fa.entry.go_to_auth: 本人確認へ
+front.2fa.entry.go_to_auth: ご本人確認へ
 
-front.2fa.device_auth.title: 本人確認
+front.2fa.device_auth.title: ご本人確認
 front.2fa.device_auth.send.message: |
   携帯電話に認証コードを送信します。
-  お手持ちの携帯電話番号を入力してください。
+  お手持ちの携帯電話番号を入力して「認証コードを送信」をクリックしてください。
 front.2fa.device_auth.input.message: |
   携帯電話に送信された認証コードを入力してください。
   送信されていない場合は「認証コードを再送信」をクリックしてください。
@@ -40,7 +40,7 @@ front.2fa.device_auth.input.message: |
 front.2fa.title: 2段階認証
 front.2fa.sms.send.message: |
   携帯電話に認証コードを送信します。
-  お手持ちの携帯電話番号を入力してください。
+  お手持ちの携帯電話番号を入力して「認証コードを送信」をクリックしてください。
 front.2fa.sms.input.message: |
   携帯電話に送信された認証コードを入力してください。
   送信されていない場合は「認証コードを再送信」をクリックしてください。
