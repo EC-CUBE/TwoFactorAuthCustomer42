@@ -22,7 +22,6 @@ use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -102,14 +101,10 @@ class CustomerPersonalValidationController extends AbstractController
                     // デバイス認証完了
                     if ($Customer->getDeviceAuthedPhoneNumber() === $phoneNumber) {
                         // 既に認証済みの電話番号の場合は、更新しない
-                        $response = new RedirectResponse(
-                            $this->generateUrl(
-                                'entry_activate',
-                                ['secret_key' => $secret_key]
-                            )
+                        return $this->redirectToRoute(
+                            'entry_activate',
+                            ['secret_key' => $secret_key]
                         );
-
-                        return $response;
                     }
 
                     $Customer->setDeviceAuthed(true);
@@ -120,14 +115,10 @@ class CustomerPersonalValidationController extends AbstractController
                     $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
 
                     // アクティベーション実行
-                    $response = new RedirectResponse(
-                        $this->generateUrl(
-                            'entry_activate',
-                            ['secret_key' => $secret_key]
-                        )
+                    return $this->redirectToRoute(
+                        'entry_activate',
+                        ['secret_key' => $secret_key]
                     );
-
-                    return $response;
                 }
             } else {
                 $error = trans('front.2fa.onetime.invalid_message__reinput');
@@ -183,14 +174,11 @@ class CustomerPersonalValidationController extends AbstractController
                 } else {
                     log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                 }
-                $response = new RedirectResponse(
-                    $this->generateUrl(
-                        'plg_customer_2fa_device_auth_input_onetime',
-                        ['secret_key' => $secret_key]
-                    )
-                );
 
-                return $response;
+                return $this->redirectToRoute(
+                    'plg_customer_2fa_device_auth_input_onetime',
+                    ['secret_key' => $secret_key]
+                );
             } else {
                 $error = trans('front.2fa.sms.send.failure_message');
             }
