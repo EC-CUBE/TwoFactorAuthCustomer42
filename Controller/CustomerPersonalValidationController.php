@@ -95,36 +95,27 @@ class CustomerPersonalValidationController extends AbstractController
                     // ワンタイムトークン不一致 or 有効期限切れ
                     $error = trans('front.2fa.onetime.invalid_message__reinput');
                 } else {
+                    // ワンタイムトークン一致
                     // 送信電話番号をセッションより取得
                     $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
-                    // ワンタイムトークン一致
-                    // デバイス認証完了
-                    if ($Customer->getDeviceAuthedPhoneNumber() === $phoneNumber) {
-                        // 既に認証済みの電話番号の場合は、更新しない
+                    // 他のデバイスで既に認証済みの電話番号かチェック
+                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                        $Customer->setDeviceAuthed(true);
+                        $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
+                        $Customer->setDeviceAuthOneTimeTokenExpire(null);
+                        $this->entityManager->persist($Customer);
+                        $this->entityManager->flush();
+                        $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
+    
+                        // アクティベーション実行
                         return $this->redirectToRoute(
                             'entry_activate',
                             ['secret_key' => $secret_key]
                         );
+                    } else {
+                        log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
+                        $error = trans('front.2fa.onetime.invalid_message__reinput');
                     }
-                    // 他のユーザーが同じ電話番号で本人認証済み状態であれば、もう一度電話番号入力画面に戻せる
-                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) != null) {
-                        return $this->redirectToRoute('plg_customer_2fa_sms_send_onetime', [
-                            'secret_key' => $secret_key,
-                        ]);
-                    }
-
-                    $Customer->setDeviceAuthed(true);
-                    $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
-                    $Customer->setDeviceAuthOneTimeTokenExpire(null);
-                    $this->entityManager->persist($Customer);
-                    $this->entityManager->flush();
-                    $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
-
-                    // アクティベーション実行
-                    return $this->redirectToRoute(
-                        'entry_activate',
-                        ['secret_key' => $secret_key]
-                    );
                 }
             } else {
                 $error = trans('front.2fa.onetime.invalid_message__reinput');
