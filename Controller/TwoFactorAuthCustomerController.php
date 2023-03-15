@@ -20,18 +20,11 @@ use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthTypeCustomer;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Twig\Environment;
 
 class TwoFactorAuthCustomerController extends AbstractController
 {
-    /**
-     * @var TokenStorageInterface
-     */
-    protected TokenStorageInterface $tokenStorage;
-
     /**
      * @var CustomerRepository
      */
@@ -44,23 +37,21 @@ class TwoFactorAuthCustomerController extends AbstractController
     /**
      * @var Environment
      */
-    protected $twig;
+    protected Environment $twig;
 
     /**
      * TwoFactorAuthCustomerController constructor.
      *
-     * @param CustomerRepository $customerRepository,
-     * @param TokenStorageInterface $tokenStorage,
-     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService,
+     * @param CustomerRepository $customerRepository ,
+     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService ,
+     * @param Environment $twig
      */
     public function __construct(
         CustomerRepository $customerRepository,
-        TokenStorageInterface $tokenStorage,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         Environment $twig
         ) {
         $this->customerRepository = $customerRepository;
-        $this->tokenStorage = $tokenStorage;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;
     }
