@@ -230,22 +230,21 @@ class CustomerTwoFactorAuthService
         if ($route != null) {
             $includeRouts = $this->getIncludeRoutes();
             if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
+                // 重要操作ルーティングの場合、
                 $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
-                // 重要操作ルーティングの場合、
-                return $this->isAuthedImportantRoutes($Customer, $cookieName, $expire);
             } else {
-                $cookieName = $this->cookieName;
                 // デフォルトルーティングの場合、
-                return $this->isAuthedDefaultRoutes($Customer, $cookieName, $expire);
+                $cookieName = $this->cookieName;
             }
+            return $this->isRouteAuthed($Customer, $cookieName, $expire);
         }
 
         return false;
     }
 
     /**
-     * デフォルトルートは認証済みか
+     * デフォルトルート・重要操作ルーティングは認証済みか
      * データベースの中に保存しているデータとクッキー値を比較する
      *
      * @param Customer $Customer
@@ -254,7 +253,7 @@ class CustomerTwoFactorAuthService
      *
      * @return bool
      */
-    public function isAuthedDefaultRoutes(Customer $Customer, string $cookieName, int $expire): bool
+    public function isRouteAuthed(Customer $Customer, string $cookieName, int $expire): bool
     {
         if ($json = $this->request->cookies->get($cookieName)) {
             $configs = json_decode($json);
@@ -285,39 +284,6 @@ class CustomerTwoFactorAuthService
     }
 
     /**
-     * 重要操作ルーティング認証済みか
-     * Customer秘密キーで比較する
-     *
-     * @param Customer $Customer
-     * @param string $cookieName
-     * @param int $expire
-     *
-     * @return bool
-     */
-    public function isAuthedImportantRoutes(Customer $Customer, string $cookieName, int $expire): bool
-    {
-        if ($json = $this->request->cookies->get($cookieName)) {
-            $configs = json_decode($json);
-            $encodedString = $this->encoder->encodePassword($Customer->getId().$Customer->getSecretKey(), $Customer->getSalt());
-            if (
-                $configs
-                && isset($configs->{$Customer->getId()})
-                && ($config = $configs->{$Customer->getId()})
-                && property_exists($config, 'key')
-                && $config->key === $encodedString
-                && (
-                    $this->expire == 0
-                    || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-'.$expire))))
-                )
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * 2段階認証用Cookie生成.
      *
      * @param Customer $Customer
@@ -328,23 +294,20 @@ class CustomerTwoFactorAuthService
     public function createAuthedCookie($Customer, $route = null): Cookie
     {
         $expire = $this->expire;
+        $cookieName = $this->cookieName;
         if ($route != null) {
             $includeRouts = $this->getIncludeRoutes();
             if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
                 $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
-
-                return $this->createImportantRouteAuthCookie($Customer, $cookieName, $expire);
             }
         }
-        $cookieName = $this->cookieName;
-
-        return $this->createDefaultRouteAuthCookie($Customer, $cookieName, $expire);
+        return $this->createRouteAuthCookie($Customer, $cookieName, $expire);
     }
 
     /**
      * ２段階認証用Cookie生成.
-     * デフォルトルートの場合、クッキーデータをデータベースに保存する
+     * クッキーデータをデータベースに保存する
      *
      * @param Customer $Customer
      * @param string $cookieName
@@ -352,7 +315,7 @@ class CustomerTwoFactorAuthService
      *
      * @return mixed
      */
-    public function createDefaultRouteAuthCookie(Customer $Customer, string $cookieName, int $expire)
+    public function createRouteAuthCookie(Customer $Customer, string $cookieName, int $expire)
     {
         return $this->entityManager->wrapInTransaction(function (EntityManagerInterface $em) use ($expire, $cookieName, $Customer) {
             $cookieData = $this->twoFactorCustomerCookieRepository->generateCookieData(
@@ -387,43 +350,6 @@ class CustomerTwoFactorAuthService
                 $this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null // sameSite
             );
         });
-    }
-
-    /**
-     * 重要操作ルーティングの場合、Customerの秘密鍵でクッキーデータを作成する
-     *
-     * @param Customer $Customer
-     * @param string $cookieName
-     * @param int $expire
-     *
-     * @return Cookie
-     */
-    public function createImportantRouteAuthCookie(Customer $Customer, string $cookieName, int $expire)
-    {
-        $encodedString = $this->encoder->encodePassword($Customer->getId().$Customer->getSecretKey(), $Customer->getSalt());
-
-        $configs = json_decode('{}');
-        if ($json = $this->request->cookies->get($cookieName)) {
-            $configs = json_decode($json);
-        }
-        $configs->{$Customer->getId()} = [
-            'key' => $encodedString,
-            'date' => time(),
-        ];
-
-        $cookie = new Cookie(
-            $cookieName, // name
-            json_encode($configs), // value
-            $expire == 0 ? 0 : time() + $expire, // expire
-            $this->request->getBasePath(), // path
-            null, // domain
-            $this->eccubeConfig->get('eccube_force_ssl') ? true : false, // secure
-            true, // httpOnly
-            false, // raw
-            $this->eccubeConfig->get('eccube_force_ssl') ? Cookie::SAMESITE_NONE : null // sameSite
-        );
-
-        return $cookie;
     }
 
     /**
