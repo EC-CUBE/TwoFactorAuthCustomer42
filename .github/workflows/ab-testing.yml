@@ -134,6 +134,10 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
       - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
         run: sleep 120s
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
       - name: Request home page - PGSQL NO PLUGIN BASE
         run: |
           sudo apt-get install apache2-utils
