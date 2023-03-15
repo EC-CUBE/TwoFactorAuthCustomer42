@@ -106,7 +106,7 @@ class Event implements EventSubscriberInterface
     }
 
     /**
-     * [/admin/customer/edit]表示の時のEvent Fork.
+     * [/admin/customer/edit]表示の時のEvent Hook.
      * 二段階認証関連項目を追加する.
      *
      * @param TemplateEvent $event
