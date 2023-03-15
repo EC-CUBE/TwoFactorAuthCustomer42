@@ -76,7 +76,7 @@ class CustomerPersonalValidationController extends AbstractController
      */
     public function deviceAuthInputOneTime(Request $request, $secret_key)
     {
-        if ($this->isDeviceAuthed()) {
+        if ($this->isGranted('ROLE_USER')) {
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
@@ -143,7 +143,7 @@ class CustomerPersonalValidationController extends AbstractController
      */
     public function deviceAuthSendOneTime(Request $request, $secret_key)
     {
-        if ($this->isDeviceAuthed()) {
+        if ($this->isGranted('ROLE_USER')) {
             // 認証済みならばマイページへ
             return $this->redirectToRoute('mypage');
         }
