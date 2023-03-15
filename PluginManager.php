@@ -170,20 +170,13 @@ class PluginManager extends AbstractPluginManager
     {
         $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
         if ($TwoFactorAuthConfig) {
-            return $TwoFactorAuthConfig;
+            return;
         }
 
         // 初期値を保存
         $TwoFactorAuthConfig = new TwoFactorAuthConfig();
-
-        // 除外ルートの登録
-        foreach ($this->pages as $p) {
-            $TwoFactorAuthConfig->addExcludeRoute($p[0]);
-        }
         $em->persist($TwoFactorAuthConfig);
         $em->flush();
-
-        return;
     }
 
 }
