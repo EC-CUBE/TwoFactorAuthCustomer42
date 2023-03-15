@@ -75,7 +75,6 @@ class TwoFactorAuthCustomerController extends AbstractController
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
-            $form = $builder->getForm();
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 // 選択された2段階認証方式を更新

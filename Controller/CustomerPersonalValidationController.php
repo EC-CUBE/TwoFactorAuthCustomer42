@@ -86,7 +86,6 @@ class CustomerPersonalValidationController extends AbstractController
         /** @var Customer $Customer */
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
         $builder = $this->formFactory->createBuilder(TwoFactorAuthSmsTypeCustomer::class);
-        $form = null;
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
@@ -165,8 +164,6 @@ class CustomerPersonalValidationController extends AbstractController
         /** @var Customer $Customer */
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
         $builder = $this->formFactory->createBuilder(TwoFactorAuthPhoneNumberTypeCustomer::class);
-        $form = null;
-        $auth_key = null;
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
