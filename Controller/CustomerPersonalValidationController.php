@@ -106,6 +106,12 @@ class CustomerPersonalValidationController extends AbstractController
                             ['secret_key' => $secret_key]
                         );
                     }
+                    // 他のユーザーが同じ電話番号で本人認証済み状態であれば、もう一度電話番号入力画面に戻せる
+                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) != null) {
+                        return $this->redirectToRoute('plg_customer_2fa_sms_send_onetime', [
+                            'secret_key' => $secret_key,
+                        ]);
+                    }
 
                     $Customer->setDeviceAuthed(true);
                     $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
