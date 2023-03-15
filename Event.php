@@ -13,18 +13,14 @@
 
 namespace Plugin\TwoFactorAuthCustomer42;
 
-use Eccube\Entity\BaseInfo;
-use Eccube\Repository\BaseInfoRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Eccube\Event\EccubeEvents;
-use Eccube\Event\EventArgs;
+use Eccube\Entity\BaseInfo;
 use Eccube\Event\TemplateEvent;
-use Eccube\Request\Context;
-use Plugin\TwoFactorAuthCustomer42\Repository\BaseTwoFactorAuthSettingRepository;
+use Eccube\Repository\BaseInfoRepository;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Twig\Environment;
 
 /**
  * Class Event.
@@ -52,14 +48,14 @@ class Event implements EventSubscriberInterface
     private $entityManager;
 
     /**
-     * @var \Twig_Environment
+     * @var Environment
      */
     private $twig;
 
     /**
      * @var NotifierInterface
      */
-    //private $notifier;
+    // private $notifier;
 
     /**
      * Event constructor.
@@ -68,16 +64,15 @@ class Event implements EventSubscriberInterface
      * @param BaseInfoRepository $baseInfoRepository
      * @param EntityManagerInterface $entityManager
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService
-     * @param \Twig_Environment $twig
+     * @param Environment $twig
      */
     public function __construct(
         ContainerInterface $container,
         BaseInfoRepository $baseInfoRepository,
-        EntityManagerInterface $entityManager, 
+        EntityManagerInterface $entityManager,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        \Twig_Environment $twig
-    )
-    {
+        Environment $twig
+    ) {
         $this->container = $container;
         $this->BaseInfo = $baseInfoRepository->get();
         $this->entityManager = $entityManager;
@@ -94,7 +89,7 @@ class Event implements EventSubscriberInterface
     }
 
     /**
-     * [/admin/setting/shop]表示の時のEvent Fork.
+     * [/admin/setting/shop]表示の時のEvent Hook.
      * SMS関連項目を追加する.
      *
      * @param TemplateEvent $event
@@ -111,7 +106,7 @@ class Event implements EventSubscriberInterface
     }
 
     /**
-     * [/admin/customer/edit]表示の時のEvent Fork.
+     * [/admin/customer/edit]表示の時のEvent Hook.
      * 二段階認証関連項目を追加する.
      *
      * @param TemplateEvent $event
@@ -122,5 +117,4 @@ class Event implements EventSubscriberInterface
         $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/customer_edit.twig';
         $event->addSnippet($twig);
     }
-
 }

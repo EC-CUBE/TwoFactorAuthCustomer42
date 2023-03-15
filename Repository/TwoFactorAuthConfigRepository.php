@@ -36,21 +36,10 @@ class TwoFactorAuthConfigRepository extends AbstractRepository
     }
 
     /**
-     *
      * @return $result
      */
     public function findOne()
     {
-        $qb = $this->createQueryBuilder('c')->setMaxResults(1)->select('c');
-
-        // 実行
-        $result = null;
-        $results = $qb->getQuery()->getResult();
-        if (!is_null($results) && count($results) > 0) {
-            $result = $results[0];
-        }
-
-        return $result;
+        return $this->findOneBy([], ['id' => 'DESC']);
     }
-
 }

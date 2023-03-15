@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type\Extension\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,8 +35,7 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
      */
     public function __construct(
         EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
     }
 
@@ -47,7 +57,7 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
                 'required' => false,
                 'mapped' => true
             ])
-            ->add('option_activate_sms', ToggleSwitchType::class, [
+            ->add('option_activate_device', ToggleSwitchType::class, [
                 'required' => false,
                 'mapped' => true
             ])

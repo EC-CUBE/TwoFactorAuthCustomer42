@@ -15,28 +15,25 @@ namespace Plugin\TwoFactorAuthCustomer42\EventListener;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
-use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Entity\Customer;
+use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Repository\CustomerRepository;
 use Eccube\Request\Context;
-use Eccube\Service\TwoFactorAuthService;
-use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
-use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
+use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
-use Symfony\Component\HttpKernel\Exception as HttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
+use Symfony\Component\Security\Http\Event\LogoutEvent;
 
 class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 {
-
     /**
      * アクティベーション
      */
@@ -93,12 +90,12 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $session;
 
     /**
-     * 除外ルート.
+     * 通常（ログイン・マイページ）ルート.
      */
-    protected $exclude_routes;
+    protected $default_routes;
 
     /**
-     * 個別認証ルート.
+     * 重要操作ルート.
      */
     protected $include_routes;
 
@@ -114,15 +111,15 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param SessionInterface $session
      */
     public function __construct(
-        EntityManagerInterface       $entityManager, 
-        EccubeConfig                 $eccubeConfig,
-        Context                      $requestContext,
-        UrlGeneratorInterface        $router,
+        EntityManagerInterface $entityManager,
+        EccubeConfig $eccubeConfig,
+        Context $requestContext,
+        UrlGeneratorInterface $router,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        BaseInfoRepository           $baseInfoRepository,
-        CustomerRepository           $customerRepository,
-        TwoFactorAuthTypeRepository  $twoFactorAuthTypeRepository,
-        SessionInterface             $session
+        BaseInfoRepository $baseInfoRepository,
+        CustomerRepository $customerRepository,
+        TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
+        SessionInterface $session
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -135,22 +132,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->session = $session;
 
+        $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
-        $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
-
-        $this->include_routes = array_merge($this->include_routes, [
-            'login',
-            'mypage_login',
-            'shopping_login',
-            'contact',
-        ]);
-        /*
-        $this->exclude_routes = array_merge($this->exclude_routes, [
-            'entry',
-            'entry_confirm',
-            'logout',
-        ]);
-        */
     }
 
     /**
@@ -160,12 +143,14 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     {
         return [
             KernelEvents::CONTROLLER_ARGUMENTS => ['onKernelController', 7],
-            LoginSuccessEvent::class => ['onLoginSuccess']
+            LoginSuccessEvent::class => ['onLoginSuccess'],
+            LogoutEvent::class => 'logoutEvent',
         ];
     }
 
     /**
-     * リクエスト受診時イベントハンドラ.
+     * リクエスト受信時イベントハンドラ.
+     *
      * @param ControllerArgumentsEvent $event
      */
     public function onKernelController(ControllerArgumentsEvent $event)
@@ -180,31 +165,23 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
             return;
         }
 
-        if (($this->baseInfo->isOptionCustomerActivate() && !$this->baseInfo->isOptionActivateSms()) 
-            && !$this->baseInfo->isTwoFactorAuthUse()) {
-            // デバイス認証なし かつ 2段階認証使用しない場合は処理なし
+        if (!$this->baseInfo->isTwoFactorAuthUse()) {
+            // 2段階認証使用しない場合は処理なし
             return;
         }
 
         $route = $event->getRequest()->attributes->get('_route');
         $uri = $event->getRequest()->getRequestUri();
 
-        if ($this->isActivationRoute($route)) {
-            // デバイス認証（アクティベーション前に介入）
-            $this->deviceAuth($event);
-            return;
-        }
-
         $Customer = $this->requestContext->getCurrentUser();
 
-        if ($Customer && $Customer instanceof Customer) {
-
-            if ($Customer->getStatus()->getId() !== CustomerStatus::ACTIVE) {
+        if ($Customer instanceof Customer) {
+            if ($Customer->getStatus()->getId() !== CustomerStatus::REGULAR) {
                 // ログインしていない場合、処理なし
                 return;
             }
 
-            if (!$this->isIncludeRoute($route, $uri)) {
+            if (!$this->isDefaultRoute($route, $uri) && !$this->isIncludeRoute($route, $uri)) {
                 // 重要操作指定ではなく、マイページ系列ではない場合、処理なし
                 return;
             }
@@ -217,6 +194,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 
     /**
      * ログイン完了 イベントハンドラ.
+     *
      * @param LoginSuccessEvent $event
      */
     public function onLoginSuccess(LoginSuccessEvent $event)
@@ -231,69 +209,65 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
             return;
         }
 
+        if ($this->requestContext->getCurrentUser() === null) {
+            // ログインしていない場合は処理なし
+            return;
+        }
+
+        if ($this->requestContext->getCurrentUser()->getTwoFactorAuthType() !== null &&
+            $this->requestContext->getCurrentUser()->getTwoFactorAuthType()->isDisabled()) {
+            // ユーザーが選択した２段階認証方式は無効になっている場合、ログアウトさせる。
+            return new RedirectResponse($this->router->generate('logout'), 302);
+        }
+
         $this->multifactorAuth(
-            $event, 
-            $this->requestContext->getCurrentUser(), 
-            $event->getRequest()->attributes->get('_route'), 
+            $event,
+            $this->requestContext->getCurrentUser(),
+            $event->getRequest()->attributes->get('_route'),
             $event->getRequest()->getRequestUri());
 
         return;
     }
 
     /**
-     * デバイス認証.
-     * @param mixed $event
-     * @throws HttpException\NotFoundHttpException 
+     * ログアウトする前に全ての2FA認証クッキーを消す
+     *
+     * @param LogoutEvent $logoutEvent ログアウトイベント
+     * @return void
      */
-    public function deviceAuth($event) 
+    public function logoutEvent(LogoutEvent $logoutEvent)
     {
-        // アクティベーション
-        $secret_key = $event->getRequest()->attributes->get('secret_key');
-        $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
-        if (is_null($Customer)) {
-            throw new HttpException\NotFoundHttpException();
-        }
-
-        if ($Customer->isDeviceAuthed()) {
-            return;
-        }
-
-        // デバイス認証されていない場合
-        if ($this->baseInfo->isOptionActivateSms() && $this->baseInfo->isOptionCustomerActivate()) {
-            // 仮会員登録機能:有効 / SMSによる本人認証:有効の場合　デバイス認証画面へリダイレクト
-            $url = $this->router->generate(
-                'plg_customer_2fa_device_auth_send_onetime', 
-                ['secret_key' => $secret_key],
-                UrlGeneratorInterface::ABSOLUTE_PATH
-            );
-
-            $event->setController(function () use ($url) {
-                return new RedirectResponse($url, $status = 302);
-            });
-        }
-
-        return;
+        $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
     }
 
     /**
      * 多要素認証.
+     *
      * @param mixed $event
-     * @throws HttpException\NotFoundHttpException 
+     * @param Customer $Customer
+     * @param string $route
+     * @param string $uri
+     *
      * @return mixed
      */
-    public function multifactorAuth($event, $Customer, $route, $uri) 
+    private function multifactorAuth($event, $Customer, $route, $uri)
     {
         if (!$this->baseInfo->isTwoFactorAuthUse()) {
             // MFA無効の場合処理なし
             return;
         }
 
+        if (count($this->twoFactorAuthTypeRepository->findBy(['isDisabled' => false])) == 0) {
+            // 2段階認証プラグインが有効化されていない場合処理なし
+            return;
+        }
+
         // [会員] ログイン時2段階認証状態
-        $is_auth = $this->customerTwoFactorAuthService->isAuth($Customer, $route);
+        $is_auth = $this->customerTwoFactorAuthService->isAuthed($Customer, $route);
 
         if (!$is_auth) {
             log_info('[2段階認証] 実施');
-            if (!$Customer->isTwoFactorAuth()) {
+            if ($Customer->getTwoFactorAuthType() === null) {
                 // 2段階認証未設定
                 $this->selectAuthType($event, $Customer, $route);
             } else {
@@ -307,6 +281,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 
     /**
      * 多要素認証方式設定画面へリダイレクト.
+     *
      * @param Event $event
      * @param Customer $Customer
      * @param string|null $route
@@ -326,12 +301,13 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         } else {
             $event->setResponse(new RedirectResponse($url, 302));
         }
+
         return;
     }
 
     /**
      * 2段階認証のディスパッチ.
-     * 
+     *
      * @param Event $event
      * @param Customer $Customer
      * @param string|null $route
@@ -341,11 +317,20 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         // コールバックURLをセッションへ設定
         $this->setCallbackRoute($route);
         // 選択された多要素認証方式で指定されているルートへリダイレクト
+        if ($Customer->getTwoFactorAuthType() !== null && $Customer->getTwoFactorAuthType()->isDisabled()) {
+            // ユーザーが選択した２段階認証方式は無効になっている場合、ログアウトさせる。
+            $event->setController(function () {
+                return new RedirectResponse($this->router->generate('logout'), 302);
+            });
+
+            return;
+        }
+
         $url = $this->router->generate(
-            $Customer->getTwoFactorAuthType()->getRoute(), 
-            [], 
+            $Customer->getTwoFactorAuthType()->getRoute(),
+            [],
             UrlGeneratorInterface::ABSOLUTE_PATH);
-        
+
         if ($event instanceof ControllerArgumentsEvent) {
             $event->setController(function () use ($url) {
                 return new RedirectResponse($url, 302);
@@ -353,11 +338,13 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         } else {
             $event->setResponse(new RedirectResponse($url, 302));
         }
+
         return;
     }
 
     /**
      * コールバックルートをセッションへ設定.
+     *
      * @param string|null $route
      */
     private function setCallbackRoute(?string $route)
@@ -368,44 +355,54 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     }
 
     /**
-     * アクティベーションルートかチェック.
-     *  
+     * ルート・URIが個別認証対象かチェック.
+     *
      * @param string $route
      * @param string $uri
+     *
      * @return bool
      */
-    private function isActivationRoute(string $route): bool
+    private function isDefaultRoute(string $route, string $uri): bool
     {
-        // ルートで認証
-        if (in_array($route, [self::ACTIVATE_ROUTE])) {
-            return true;
-        }
-
-        return false;
+        return $this->isTargetRoute($this->default_routes, $route, $uri);
     }
 
     /**
      * ルート・URIが個別認証対象かチェック.
-     *  
+     *
      * @param string $route
      * @param string $uri
+     *
      * @return bool
      */
     private function isIncludeRoute(string $route, string $uri): bool
     {
+        return $this->isTargetRoute($this->include_routes, $route, $uri);
+    }
+
+    /**
+     * ルート・URIが対象であるかチェック.
+     *
+     * @param array $targetRoutes
+     * @param string $route
+     * @param string $uri
+     *
+     * @return bool
+     */
+    private function isTargetRoute($targetRoutes, string $route, string $uri): bool
+    {
         // ルートで認証
-        if (in_array($route, $this->include_routes)) {
+        if (in_array($route, $targetRoutes)) {
             return true;
         }
 
         // URIで認証
-        foreach($this->include_routes as $r) {
-            if ($r != '' && $r !== '/' && strpos($uri, $r) === 0) {            
+        foreach ($targetRoutes as $r) {
+            if ($r != '' && $r !== '/' && strpos($uri, $r) === 0) {
                 return true;
             }
         }
 
         return false;
     }
-
 }

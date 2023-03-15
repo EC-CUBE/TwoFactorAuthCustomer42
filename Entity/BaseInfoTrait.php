@@ -35,23 +35,23 @@ trait BaseInfoTrait
     /**
      * SMS通知の設定
      * @var bool
-     * @ORM\Column(name="option_activate_sms", type="boolean", nullable=false, options={"default":false})
+     * @ORM\Column(name="option_activate_device", type="boolean", nullable=false, options={"default":false})
      */
-    private bool $option_activate_sms;
+    private bool $option_activate_device;
     /**
      * @return bool
      */
-    public function isOptionActivateSms(): bool
+    public function isOptionActivateDevice(): bool
     {
-        return $this->option_activate_sms;
+        return $this->option_activate_device;
     }
 
     /**
-     * @param bool $option_activate_sms
+     * @param bool $option_activate_device
      */
-    public function setOptionActivateSms(bool $option_activate_sms): void
+    public function setOptionActivateDevice(bool $option_activate_device): void
     {
-        $this->option_activate_sms = $option_activate_sms;
+        $this->option_activate_device = $option_activate_device;
     }
 
 }

@@ -1,12 +1,28 @@
+eccube:
+  rate_limiter:
+    device_auth_request:
+      # 実行するルーティングを指定します。
+      route: plg_customer_2fa_device_auth_send_onetime
+      # 実行するmethodを指定します。デフォルトはPOSTです。
+      method: [ 'POST' ]
+      # スロットリングの制御方法を設定します。ip・customerを指定できます。
+      type: [ 'ip', 'customer' ]
+      # 試行回数を設定します。
+      limit: 5
+      # インターバルを設定します。
+      interval: '30 minutes'
+
 parameters:
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME): 'plugin_eccube_customer_2fa'
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_SMS_SEND_COOKIE_NAME): 'plugin_eccube_customer_2fa_sms'
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_DEVICE_AUTH_SEND_COOKIE_NAME): 'plugin_eccube_device_auth_2fa_sms'
-  env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE): '14'
+  env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE): '3600'
   env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME): 'plugin_eccube_route_customer_2fa'
-  env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE): '1'
+  env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE): '3600'
+  env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH): '64'
 
   plugin_eccube_2fa_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME)%'
   plugin_eccube_2fa_route_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME)%'
   plugin_eccube_2fa_customer_expire: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE)%'
   plugin_eccube_2fa_route_customer_expire: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE)%'
+  plugin_eccube_2fa_route_cookie_value_character_length: '%env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH)%'

@@ -1,0 +1,947 @@
+name: Apache bench (HTTP load speed) testing for EC-CUBE
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  load-test:
+    name: Apache bench (HTTP load speed) testing for EC-CUBE
+    runs-on: ubuntu-latest
+    steps:
+      # POSTGRES SQL
+      # BASE PRODUCTS
+      # PLUGIN
+      - name: PGSQL BASE PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
+      - name: Wait 30s for the database to load, (as I do not know the databases active state)
+        run: sleep 30s
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Request home page - PGSQL PLUGIN BASE
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_5.txt
+          export PG_4_1_HOME_1="$(tail -n +23 pg-plugin-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_HOME_2="$(tail -n +23 pg-plugin-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_HOME_3="$(tail -n +23 pg-plugin-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_HOME_4="$(tail -n +23 pg-plugin-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_HOME_5="$(tail -n +23 pg-plugin-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_HOME_RPS_1="$(tail -n +20 pg-plugin-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_HOME_RPS_2="$(tail -n +20 pg-plugin-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_HOME_RPS_3="$(tail -n +20 pg-plugin-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_HOME_RPS_4="$(tail -n +20 pg-plugin-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_HOME_RPS_5="$(tail -n +20 pg-plugin-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_4_1_HOME_1 + $PG_4_1_HOME_2 + $PG_4_1_HOME_3 + $PG_4_1_HOME_4 + $PG_4_1_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$PG_4_1_HOME_RPS_1 + $PG_4_1_HOME_RPS_2 + $PG_4_1_HOME_RPS_3 + $PG_4_1_HOME_RPS_4 + $PG_4_1_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export PSQL_PLUGIN_BASE_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PSQL_PLUGIN_BASE_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PSQL_PLUGIN_BASE_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PSQL_PLUGIN_BASE_HOME_RPS_RESULT}"
+           echo "PSQL_PLUGIN_BASE_HOME_RESULT=${PSQL_PLUGIN_BASE_HOME_RESULT}" >> $GITHUB_ENV
+           echo "PSQL_PLUGIN_BASE_HOME_RPS_RESULT=${PSQL_PLUGIN_BASE_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - PGSQL PLUGIN BASE
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_5.txt
+          export PG_4_1_LIST_1="$(tail -n +23 pg-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_LIST_2="$(tail -n +23 pg-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_LIST_3="$(tail -n +23 pg-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_LIST_4="$(tail -n +23 pg-plugin-base-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_LIST_5="$(tail -n +23 pg-plugin-base-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_4_1_LIST_RPS_1="$(tail -n +20 pg-plugin-base-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_LIST_RPS_2="$(tail -n +20 pg-plugin-base-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_LIST_RPS_3="$(tail -n +20 pg-plugin-base-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_LIST_RPS_4="$(tail -n +20 pg-plugin-base-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_4_1_LIST_RPS_5="$(tail -n +20 pg-plugin-base-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_4_1_LIST_1 + $PG_4_1_LIST_2 + $PG_4_1_LIST_3 + $PG_4_1_LIST_4 + $PG_4_1_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$PG_4_1_LIST_RPS_1 + $PG_4_1_LIST_RPS_2 + $PG_4_1_LIST_RPS_3 + $PG_4_1_LIST_RPS_4 + $PG_4_1_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export PSQL_PLUGIN_BASE_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PSQL_PLUGIN_BASE_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PSQL_PLUGIN_BASE_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PSQL_PLUGIN_BASE_LIST_RPS_RESULT}"
+           echo "PSQL_PLUGIN_BASE_LIST_RESULT=${PSQL_PLUGIN_BASE_LIST_RESULT}" >> $GITHUB_ENV
+           echo "PSQL_PLUGIN_BASE_LIST_RPS_RESULT=${PSQL_PLUGIN_BASE_LIST_RPS_RESULT}" >> $GITHUB_ENV
+        # Upload Evidence
+      - name: Drop PGSQL ECCUBE for 4.2
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # PGSQL
+      # BASE PRODUCTS
+      # NO PLUGIN
+      - name: PGSQL BASE NO PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Setup to EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
+        run: sleep 120s
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml up -d --wait
+      - name: Request home page - PGSQL NO PLUGIN BASE
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_5.txt
+          export PG_NO_PLUGIN_BASE_HOME_1="$(tail -n +23 pg-no-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_HOME_2="$(tail -n +23 pg-no-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_HOME_3="$(tail -n +23 pg-no-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_HOME_4="$(tail -n +23 pg-no-plugin-10000-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_HOME_5="$(tail -n +23 pg-no-plugin-10000-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_HOME_RPS_1="$(tail -n +20 pg-no-plugin-10000-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_HOME_RPS_2="$(tail -n +20 pg-no-plugin-10000-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_HOME_RPS_3="$(tail -n +20 pg-no-plugin-10000-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_HOME_RPS_4="$(tail -n +20 pg-no-plugin-10000-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_HOME_RPS_5="$(tail -n +20 pg-no-plugin-10000-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_NO_PLUGIN_BASE_HOME_1 + $PG_NO_PLUGIN_BASE_HOME_2 + $PG_NO_PLUGIN_BASE_HOME_3 + $PG_NO_PLUGIN_BASE_HOME_4 + $PG_NO_PLUGIN_BASE_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$PG_NO_PLUGIN_BASE_HOME_RPS_1 + $PG_NO_PLUGIN_BASE_HOME_RPS_2 + $PG_NO_PLUGIN_BASE_HOME_RPS_3 + $PG_NO_PLUGIN_BASE_HOME_RPS_4 + $PG_NO_PLUGIN_BASE_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export PSQL_NO_PLUGIN_BASE_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PSQL_NO_PLUGIN_BASE_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}"
+           echo "PSQL_NO_PLUGIN_BASE_HOME_RESULT=${PSQL_NO_PLUGIN_BASE_HOME_RESULT}" >> $GITHUB_ENV
+           echo "PSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT=${PSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - PGSQL NO PLUGIN BASE
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_5.txt
+          export PG_NO_PLUGIN_BASE_LIST_1="$(tail -n +23 pg-no-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_LIST_2="$(tail -n +23 pg-no-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_LIST_3="$(tail -n +23 pg-no-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_LIST_4="$(tail -n +23 pg-no-plugin-10000-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_LIST_5="$(tail -n +23 pg-no-plugin-10000-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_BASE_LIST_RPS_1="$(tail -n +20 pg-no-plugin-10000-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_LIST_RPS_2="$(tail -n +20 pg-no-plugin-10000-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_LIST_RPS_3="$(tail -n +20 pg-no-plugin-10000-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_LIST_RPS_4="$(tail -n +20 pg-no-plugin-10000-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_BASE_LIST_RPS_5="$(tail -n +20 pg-no-plugin-10000-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_NO_PLUGIN_BASE_LIST_1 + $PG_NO_PLUGIN_BASE_LIST_2 + $PG_NO_PLUGIN_BASE_LIST_3 + $PG_NO_PLUGIN_BASE_LIST_4 + $PG_NO_PLUGIN_BASE_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$PG_NO_PLUGIN_BASE_LIST_RPS_1 + $PG_NO_PLUGIN_BASE_LIST_RPS_2 + $PG_NO_PLUGIN_BASE_LIST_RPS_3 + $PG_NO_PLUGIN_BASE_LIST_RPS_4 + $PG_NO_PLUGIN_BASE_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export PSQL_NO_PLUGIN_BASE_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PSQL_NO_PLUGIN_BASE_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}"
+           echo "PSQL_NO_PLUGIN_BASE_LIST_RESULT=${PSQL_NO_PLUGIN_BASE_LIST_RESULT}" >> $GITHUB_ENV
+           echo "PSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT=${PSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Drop PGSQL ECCUBE for 4.2.1-20230116
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # MYSQL
+      # BASE PRODUCTS
+      # PLUGIN
+      - name: MYSQL BASE PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
+      - name: Wait for 30 seconds for the database to load, (because MySQL is slow to initialize)
+        run: sleep 30s
+        shell: bash
+      - name: Request home page
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_5.txt
+          export MY_PLUGIN_HOME_BASE_1="$(tail -n +23 mysql-plugin-base-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_BASE_2="$(tail -n +23 mysql-plugin-base-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_BASE_3="$(tail -n +23 mysql-plugin-base-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_BASE_4="$(tail -n +23 mysql-plugin-base-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_BASE_5="$(tail -n +23 mysql-plugin-base-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_BASE_RPS_1="$(tail -n +20 mysql-plugin-base-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_BASE_RPS_2="$(tail -n +20 mysql-plugin-base-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_BASE_RPS_3="$(tail -n +20 mysql-plugin-base-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_BASE_RPS_4="$(tail -n +20 mysql-plugin-base-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_BASE_RPS_5="$(tail -n +20 mysql-plugin-base-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_PLUGIN_HOME_BASE_1 + $MY_PLUGIN_HOME_BASE_2 + $MY_PLUGIN_HOME_BASE_3 + $MY_PLUGIN_HOME_BASE_4 + $MY_PLUGIN_HOME_BASE_5" | bc -l)
+          RPS_SUM=$(echo "$MY_PLUGIN_HOME_BASE_RPS_1 + $MY_PLUGIN_HOME_BASE_RPS_2 + $MY_PLUGIN_HOME_BASE_RPS_3 + $MY_PLUGIN_HOME_BASE_RPS_4 + $MY_PLUGIN_HOME_BASE_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_PLUGIN_BASE_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_PLUGIN_BASE_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_PLUGIN_BASE_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_PLUGIN_BASE_HOME_RPS_RESULT}"
+           echo "MSQL_PLUGIN_BASE_HOME_RESULT=${MSQL_PLUGIN_BASE_HOME_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_PLUGIN_BASE_HOME_RPS_RESULT=${MSQL_PLUGIN_BASE_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_5.txt
+          export MY_PLUGIN_BASE_LIST_1="$(tail -n +23 mysql-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_BASE_LIST_2="$(tail -n +23 mysql-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_BASE_LIST_3="$(tail -n +23 mysql-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_BASE_LIST_4="$(tail -n +23 mysql-plugin-base-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_BASE_LIST_5="$(tail -n +23 mysql-plugin-base-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_BASE_LIST_RPS_1="$(tail -n +20 mysql-plugin-base-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_BASE_LIST_RPS_2="$(tail -n +20 mysql-plugin-base-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_BASE_LIST_RPS_3="$(tail -n +20 mysql-plugin-base-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_BASE_LIST_RPS_4="$(tail -n +20 mysql-plugin-base-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_BASE_LIST_RPS_5="$(tail -n +20 mysql-plugin-base-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_PLUGIN_BASE_LIST_1 + $MY_PLUGIN_BASE_LIST_2 + $MY_PLUGIN_BASE_LIST_3 + $MY_PLUGIN_BASE_LIST_4 + $MY_PLUGIN_BASE_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$MY_PLUGIN_BASE_LIST_RPS_1 + $MY_PLUGIN_BASE_LIST_RPS_2 + $MY_PLUGIN_BASE_LIST_RPS_3 + $MY_PLUGIN_BASE_LIST_RPS_4 + $MY_PLUGIN_BASE_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_PLUGIN_BASE_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_PLUGIN_BASE_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_PLUGIN_BASE_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_PLUGIN_BASE_LIST_RPS_RESULT}"
+           echo "MSQL_PLUGIN_BASE_LIST_RESULT=${MSQL_PLUGIN_BASE_LIST_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_PLUGIN_BASE_LIST_RPS_RESULT=${MSQL_PLUGIN_BASE_LIST_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Drop MYSQL ECCUBE for 4.2
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo  ls -la ./
+          sudo  rm -rf ./* || true
+          sudo  rm -rf ./.??* || true
+          sudo  ls -la ./
+      # MYSQL
+      # BASE PRODUCTS
+      # NO PLUGIN
+      - name: MYSQL BASE NO PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml up -d
+      - name: Wait for 30 seconds for the database to load, (because MySQL is slow to initialize)
+        run: sleep 30s
+        shell: bash
+      - name: Request home page
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_5.txt
+          export MY_NO_PLUGIN_HOME_1="$(tail -n +23 mysql-no-plugin-base-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_2="$(tail -n +23 mysql-no-plugin-base-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_3="$(tail -n +23 mysql-no-plugin-base-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_4="$(tail -n +23 mysql-no-plugin-base-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_5="$(tail -n +23 mysql-no-plugin-base-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_RPS_1="$(tail -n +20 mysql-no-plugin-base-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_2="$(tail -n +20 mysql-no-plugin-base-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_3="$(tail -n +20 mysql-no-plugin-base-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_4="$(tail -n +20 mysql-no-plugin-base-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_5="$(tail -n +20 mysql-no-plugin-base-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_NO_PLUGIN_HOME_1 + $MY_NO_PLUGIN_HOME_2 + $MY_NO_PLUGIN_HOME_3 + $MY_NO_PLUGIN_HOME_4 + $MY_NO_PLUGIN_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$MY_NO_PLUGIN_HOME_RPS_1 + $MY_NO_PLUGIN_HOME_RPS_2 + $MY_NO_PLUGIN_HOME_RPS_3 + $MY_NO_PLUGIN_HOME_RPS_4 + $MY_NO_PLUGIN_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_NO_PLUGIN_BASE_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_NO_PLUGIN_BASE_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}"
+           echo "MSQL_NO_PLUGIN_BASE_HOME_RESULT=${MSQL_NO_PLUGIN_BASE_HOME_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT=${MSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_5.txt
+          export MY_NO_PLUGIN_LIST_1="$(tail -n +23 mysql-no-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_2="$(tail -n +23 mysql-no-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_3="$(tail -n +23 mysql-no-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_4="$(tail -n +23 mysql-no-plugin-base-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_5="$(tail -n +23 mysql-no-plugin-base-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_RPS_1="$(tail -n +20 mysql-no-plugin-base-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_2="$(tail -n +20 mysql-no-plugin-base-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_3="$(tail -n +20 mysql-no-plugin-base-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_4="$(tail -n +20 mysql-no-plugin-base-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_5="$(tail -n +20 mysql-no-plugin-base-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_NO_PLUGIN_LIST_1 + $MY_NO_PLUGIN_LIST_2 + $MY_NO_PLUGIN_LIST_3 + $MY_NO_PLUGIN_LIST_4 + $MY_NO_PLUGIN_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$MY_NO_PLUGIN_LIST_RPS_1 + $MY_NO_PLUGIN_LIST_RPS_2 + $MY_NO_PLUGIN_LIST_RPS_3 + $MY_NO_PLUGIN_LIST_RPS_4 + $MY_NO_PLUGIN_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_NO_PLUGIN_BASE_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_NO_PLUGIN_BASE_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}"
+           echo "MSQL_NO_PLUGIN_BASE_LIST_RESULT=${MSQL_NO_PLUGIN_BASE_LIST_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT=${MSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Drop MYSQL ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # POSTGRES SQL
+      # 10,000 PRODUCTS
+      # PLUGIN
+      - name: PSQL 10000 PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download 4.2 Apache Bench Data
+        run: |
+          mkdir .github/workflows/pgsql
+          sudo chmod 777 .github/workflows/pgsql
+          curl --fail -LJO https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/docker-compose.bench.pgsql.yml
+          if [ ! -f docker-compose.bench.pgsql.yml ]; then
+            echo "docker-compose.bench.pgsql.yml File not found!"
+          else
+            echo "docker-compose.bench.pgsql.yml File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/.github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql -o .github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql
+          if [ ! -f .github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql ]; then
+            echo ".github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql File not found!"
+          else
+            echo ".github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/.github/workflows/pgsql/Dockerfile -o .github/workflows/pgsql/Dockerfile
+          if [ ! -f .github/workflows/pgsql/Dockerfile ]; then
+            echo ".github/workflows/pgsql/Dockerfile File not found!"
+          else
+            echo ".github/workflows/pgsql/Dockerfile File found!"
+          fi
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml up -d
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml up -d
+      - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
+        run: sleep 120s
+        shell: bash
+      - name: Install Plugin
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
+      - name: Request home page - PGSQL PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-10000-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-10000-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-10000-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-10000-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-10000-home_5.txt
+          export PG_PLUGIN_10000_HOME_1="$(tail -n +23 pg-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_HOME_2="$(tail -n +23 pg-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_HOME_3="$(tail -n +23 pg-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_HOME_4="$(tail -n +23 pg-plugin-10000-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_HOME_5="$(tail -n +23 pg-plugin-10000-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_HOME_RPS_1="$(tail -n +20 pg-plugin-10000-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_HOME_RPS_2="$(tail -n +20 pg-plugin-10000-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_HOME_RPS_3="$(tail -n +20 pg-plugin-10000-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_HOME_RPS_4="$(tail -n +20 pg-plugin-10000-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_HOME_RPS_5="$(tail -n +20 pg-plugin-10000-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_PLUGIN_10000_HOME_1 + $PG_PLUGIN_10000_HOME_2 + $PG_PLUGIN_10000_HOME_3 + $PG_PLUGIN_10000_HOME_4 + $PG_PLUGIN_10000_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$PG_PLUGIN_10000_HOME_RPS_1 + $PG_PLUGIN_10000_HOME_RPS_2 + $PG_PLUGIN_10000_HOME_RPS_3 + $PG_PLUGIN_10000_HOME_RPS_4 + $PG_PLUGIN_10000_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export PG_PLUGIN_10000_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PG_PLUGIN_10000_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PG_PLUGIN_10000_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PG_PLUGIN_10000_HOME_RPS_RESULT}"
+          echo "PG_PLUGIN_10000_HOME_RESULT=${PG_PLUGIN_10000_HOME_RESULT}" >> $GITHUB_ENV
+          echo "PG_PLUGIN_10000_HOME_RPS_RESULT=${PG_PLUGIN_10000_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - PGSQL PLUGIN 10000 PRODUCTS
+        run: |
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-10000-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-10000-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-10000-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-10000-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-10000-list_5.txt
+          export PG_PLUGIN_10000_LIST1="$(tail -n +23 pg-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_LIST2="$(tail -n +23 pg-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_LIST3="$(tail -n +23 pg-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_LIST4="$(tail -n +23 pg-plugin-10000-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_LIST5="$(tail -n +23 pg-plugin-10000-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_PLUGIN_10000_LISTRPS_1="$(tail -n +20 pg-plugin-10000-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_LISTRPS_2="$(tail -n +20 pg-plugin-10000-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_LISTRPS_3="$(tail -n +20 pg-plugin-10000-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_LISTRPS_4="$(tail -n +20 pg-plugin-10000-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_PLUGIN_10000_LISTRPS_5="$(tail -n +20 pg-plugin-10000-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_PLUGIN_10000_LIST1 + $PG_PLUGIN_10000_LIST2 + $PG_PLUGIN_10000_LIST3 + $PG_PLUGIN_10000_LIST4 + $PG_PLUGIN_10000_LIST5" | bc -l)
+          RPS_SUM=$(echo "$PG_PLUGIN_10000_LISTRPS_1 + $PG_PLUGIN_10000_LISTRPS_2 + $PG_PLUGIN_10000_LISTRPS_3 + $PG_PLUGIN_10000_LISTRPS_4 + $PG_PLUGIN_10000_LISTRPS_5" | bc -l)
+          COUNT=5
+          export PG_PLUGIN_10000_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PG_PLUGIN_10000_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PG_PLUGIN_10000_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PG_PLUGIN_10000_LIST_RPS_RESULT}"
+          echo "PG_PLUGIN_10000_LIST_RESULT=${PG_PLUGIN_10000_LIST_RESULT}" >> $GITHUB_ENV
+          echo "PG_PLUGIN_10000_LIST_RPS_RESULT=${PG_PLUGIN_10000_LIST_RPS_RESULT}" >> $GITHUB_ENV
+        # Upload Evidence
+      - name: Print Average Results to CSV
+        run: |
+          echo "POSTGRES PLUGIN 100000 _ ${PG_PLUGIN_10000_HOME_RESULT}, ${PG_PLUGIN_10000_HOME_RPS_RESULT}, ${PG_PLUGIN_10000_LIST_RESULT}, ${PG_PLUGIN_10000_LIST_RPS_RESULT}"
+      - name: Drop PGSQL ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # POSTGRES SQL
+      # 10,000 PRODUCTS
+      # NO PLUGIN
+      - name: PSQL 10000 NO PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download 4.2 Apache Bench Data
+        run: |
+          mkdir .github/workflows/pgsql
+          sudo chmod 777 .github/workflows/pgsql
+          curl --fail -LJO https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/docker-compose.bench.pgsql.yml
+          if [ ! -f docker-compose.bench.pgsql.yml ]; then
+            echo "docker-compose.bench.pgsql.yml File not found!"
+          else
+            echo "docker-compose.bench.pgsql.yml File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/.github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql -o .github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql
+          if [ ! -f .github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql ]; then
+            echo ".github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql File not found!"
+          else
+            echo ".github/workflows/pgsql/eccubedb_localhost-2022_06_30_17_25_15-dump.sql File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/apache_workbench_speed_tool/.github/workflows/pgsql/Dockerfile -o .github/workflows/pgsql/Dockerfile
+          if [ ! -f .github/workflows/pgsql/Dockerfile ]; then
+            echo ".github/workflows/pgsql/Dockerfile File not found!"
+          else
+            echo ".github/workflows/pgsql/Dockerfile File found!"
+          fi
+      - name: Start Load EC-CUBE on 4.2.1-20230116
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml up -d
+      - name: Wait 2 minutes for the database to load, (as I do not know the databases active state)
+        run: sleep 60s
+        shell: bash
+      - name: Request home page - PGSQL PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_5.txt
+          export PG_NO_PLUGIN_10000_HOME_1="$(tail -n +23 pg-no-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_HOME_2="$(tail -n +23 pg-no-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_HOME_3="$(tail -n +23 pg-no-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_HOME_4="$(tail -n +23 pg-no-plugin-10000-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_HOME_5="$(tail -n +23 pg-no-plugin-10000-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_HOME_RPS_1="$(tail -n +20 pg-no-plugin-10000-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_HOME_RPS_2="$(tail -n +20 pg-no-plugin-10000-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_HOME_RPS_3="$(tail -n +20 pg-no-plugin-10000-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_HOME_RPS_4="$(tail -n +20 pg-no-plugin-10000-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_HOME_RPS_5="$(tail -n +20 pg-no-plugin-10000-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_NO_PLUGIN_10000_HOME_1 + $PG_NO_PLUGIN_10000_HOME_2 + $PG_NO_PLUGIN_10000_HOME_3 + $PG_NO_PLUGIN_10000_HOME_4 + $PG_NO_PLUGIN_10000_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$PG_NO_PLUGIN_10000_HOME_RPS_1 + $PG_NO_PLUGIN_10000_HOME_RPS_2 + $PG_NO_PLUGIN_10000_HOME_RPS_3 + $PG_NO_PLUGIN_10000_HOME_RPS_4 + $PG_NO_PLUGIN_10000_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export PG_NO_PLUGIN_10000_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PG_NO_PLUGIN_10000_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PG_NO_PLUGIN_10000_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PG_NO_PLUGIN_10000_HOME_RPS_RESULT}"
+          echo "PG_NO_PLUGIN_10000_HOME_RESULT=${PG_NO_PLUGIN_10000_HOME_RESULT}" >> $GITHUB_ENV
+          echo "PG_NO_PLUGIN_10000_HOME_RPS_RESULT=${PG_NO_PLUGIN_10000_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - PGSQL PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_5.txt
+          export PG_NO_PLUGIN_10000_LIST_1="$(tail -n +23 pg-no-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_LIST_2="$(tail -n +23 pg-no-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_LIST_3="$(tail -n +23 pg-no-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_LIST_4="$(tail -n +23 pg-no-plugin-10000-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_LIST_5="$(tail -n +23 pg-no-plugin-10000-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export PG_NO_PLUGIN_10000_LIST_RPS_1="$(tail -n +20 pg-no-plugin-10000-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_LIST_RPS_2="$(tail -n +20 pg-no-plugin-10000-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_LIST_RPS_3="$(tail -n +20 pg-no-plugin-10000-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_LIST_RPS_4="$(tail -n +20 pg-no-plugin-10000-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export PG_NO_PLUGIN_10000_LIST_RPS_5="$(tail -n +20 pg-no-plugin-10000-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$PG_NO_PLUGIN_10000_LIST_1 + $PG_NO_PLUGIN_10000_LIST_2 + $PG_NO_PLUGIN_10000_LIST_3 + $PG_NO_PLUGIN_10000_LIST_4 + $PG_NO_PLUGIN_10000_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$PG_NO_PLUGIN_10000_LIST_RPS_1 + $PG_NO_PLUGIN_10000_LIST_RPS_2 + $PG_NO_PLUGIN_10000_LIST_RPS_3 + $PG_NO_PLUGIN_10000_LIST_RPS_4 + $PG_NO_PLUGIN_10000_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export PG_NO_PLUGIN_10000_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export PG_NO_PLUGIN_10000_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${PG_NO_PLUGIN_10000_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${PG_NO_PLUGIN_10000_LIST_RPS_RESULT}"
+          echo "PG_NO_PLUGIN_10000_LIST_RESULT=${PG_NO_PLUGIN_10000_LIST_RESULT}" >> $GITHUB_ENV
+          echo "PG_NO_PLUGIN_10000_LIST_RPS_RESULT=${PG_NO_PLUGIN_10000_LIST_RPS_RESULT}" >> $GITHUB_ENV
+        # Upload Evidence
+      - name: Print 4.2.1-20230116 Average Results to Screen
+        run: |
+          echo "4.2 POSTGRES 100000 _ ${PG_NO_PLUGIN_10000_HOME_RESULT}, ${PG_NO_PLUGIN_10000_HOME_RPS_RESULT}, ${PG_NO_PLUGIN_10000_LIST_RESULT}, ${PG_NO_PLUGIN_10000_LIST_RPS_RESULT}"
+      - name: Drop PGSQL ECCUBE for 4.2.1-20230116
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # MYSQL SQL
+      # 10,000 PRODUCTS
+      # PLUGIN
+      - name: MYSQL 10000 PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download 4.2 Apache Bench Data
+        run: |
+          mkdir .github/workflows/mysql
+          sudo chmod 777 .github/workflows/mysql
+          curl --fail -LJO https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/docker-compose.bench.mysql.yml
+          if [ ! -f docker-compose.bench.mysql.yml ]; then
+            echo "docker-compose.bench.mysql.yml File not found!"
+          else
+            echo "docker-compose.bench.mysql.yml File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/.github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql -o .github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql
+          if [ ! -f .github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql ]; then
+            echo ".github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql File not found!"
+          else
+            echo ".github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/.github/workflows/mysql/Dockerfile -o .github/workflows/mysql/Dockerfile
+          if [ ! -f .github/workflows/mysql/Dockerfile ]; then
+            echo ".github/workflows/mysql/Dockerfile File not found!"
+          else
+            echo ".github/workflows/mysql/Dockerfile File found!"
+          fi
+      - name: Download Plugin
+        uses: actions/checkout@master
+        with:
+          path: app/Plugin/TwoFactorAuthCustomer42
+      - name: Download Plugin TwoFactorAuthCustomerApp42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerApp42
+          path: app/Plugin/TwoFactorAuthCustomerApp42
+      - name: Download Plugin TwoFactorAuthCustomerSms42
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/TwoFactorAuthCustomerSms42
+          path: app/Plugin/TwoFactorAuthCustomerSms42
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
+      - name: Sleep for MySQL
+        run: sleep 60s
+        shell: bash
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Enquire ECCUBE
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml ps
+      - name: Get MYSQL Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs mysql
+      - name: Get ECCUBE Logs
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml logs ec-cube
+      - name: Install Plugin
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomer42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerApp42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console cache:clear
+
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:install --code=TwoFactorAuthCustomerSms42
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console cache:clear
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml exec -T ec-cube bin/console eccube:plugin:enable --code=TwoFactorAuthCustomerSms42
+      - name: Restart Load EC-CUBE to wait for MySQL
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 30s
+        shell: bash
+      - name: Request home page - MYSQL PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-10000-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-10000-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-10000-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-10000-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-10000-home_5.txt
+          export MY_PLUGIN_HOME_10000_1="$(tail -n +23 mysql-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_10000_2="$(tail -n +23 mysql-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_10000_3="$(tail -n +23 mysql-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_10000_4="$(tail -n +23 mysql-plugin-10000-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_10000_5="$(tail -n +23 mysql-plugin-10000-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_HOME_10000_RPS_1="$(tail -n +20 mysql-plugin-10000-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_10000_RPS_2="$(tail -n +20 mysql-plugin-10000-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_10000_RPS_3="$(tail -n +20 mysql-plugin-10000-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_10000_RPS_4="$(tail -n +20 mysql-plugin-10000-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_HOME_10000_RPS_5="$(tail -n +20 mysql-plugin-10000-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_PLUGIN_HOME_10000_1 + $MY_PLUGIN_HOME_10000_2 + $MY_PLUGIN_HOME_10000_3 + $MY_PLUGIN_HOME_10000_4 + $MY_PLUGIN_HOME_10000_5" | bc -l)
+          RPS_SUM=$(echo "$MY_PLUGIN_HOME_10000_RPS_1 + $MY_PLUGIN_HOME_10000_RPS_2 + $MY_PLUGIN_HOME_10000_RPS_3 + $MY_PLUGIN_HOME_10000_RPS_4 + $MY_PLUGIN_HOME_10000_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_PLUGIN_10000_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_PLUGIN_10000_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_PLUGIN_10000_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_PLUGIN_10000_HOME_RPS_RESULT}"
+           echo "MSQL_PLUGIN_10000_HOME_RESULT=${MSQL_PLUGIN_10000_HOME_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_PLUGIN_10000_HOME_RPS_RESULT=${MSQL_PLUGIN_10000_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - MYSQL PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-10000-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-10000-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-10000-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-10000-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-10000-list_5.txt
+          export MY_PLUGIN_10000_LIST_1="$(tail -n +23 mysql-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_10000_LIST_2="$(tail -n +23 mysql-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_10000_LIST_3="$(tail -n +23 mysql-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_10000_LIST_4="$(tail -n +23 mysql-plugin-10000-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_10000_LIST_5="$(tail -n +23 mysql-plugin-10000-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_PLUGIN_10000_LIST_RPS_1="$(tail -n +20 mysql-plugin-10000-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_10000_LIST_RPS_2="$(tail -n +20 mysql-plugin-10000-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_10000_LIST_RPS_3="$(tail -n +20 mysql-plugin-10000-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_10000_LIST_RPS_4="$(tail -n +20 mysql-plugin-10000-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_PLUGIN_10000_LIST_RPS_5="$(tail -n +20 mysql-plugin-10000-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_PLUGIN_10000_LIST_1 + $MY_PLUGIN_10000_LIST_2 + $MY_PLUGIN_10000_LIST_3 + $MY_PLUGIN_10000_LIST_4 + $MY_PLUGIN_10000_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$MY_PLUGIN_10000_LIST_RPS_1 + $MY_PLUGIN_10000_LIST_RPS_2 + $MY_PLUGIN_10000_LIST_RPS_3 + $MY_PLUGIN_10000_LIST_RPS_4 + $MY_PLUGIN_10000_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_PLUGIN_10000_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_PLUGIN_10000_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_PLUGIN_10000_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_PLUGIN_10000_LIST_RPS_RESULT}"
+           echo "MSQL_PLUGIN_10000_LIST_RESULT=${MSQL_PLUGIN_10000_LIST_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_PLUGIN_10000_LIST_RPS_RESULT=${MSQL_PLUGIN_10000_LIST_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Drop MYSQL ECCUBE for 4.2
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      # MYSQL SQL
+      # 10,000 PRODUCTS
+      # NO PLUGIN
+      - name: MYSQL 10000 NO PLUGIN
+        uses: actions/checkout@master
+        with:
+          repository: ${{ github.repository_owner }}/ec-cube
+      - name: Force open permissions
+        run: |
+          sudo chmod 777 -R .
+      - name: Download 4.2 Apache Bench Data
+        run: |
+          mkdir .github/workflows/mysql
+          sudo chmod 777 .github/workflows/mysql
+          curl --fail -LJO https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/docker-compose.bench.mysql.yml
+          if [ ! -f docker-compose.bench.mysql.yml ]; then
+            echo "docker-compose.bench.mysql.yml File not found!"
+          else
+            echo "docker-compose.bench.mysql.yml File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/.github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql -o .github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql
+          if [ ! -f .github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql ]; then
+            echo ".github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql File not found!"
+          else
+            echo ".github/workflows/mysql/mysql_localhost-2022_07_06_19_15_00-dump.sql File found!"
+          fi
+          curl --fail -LJ https://raw.githubusercontent.com/${{ github.repository_owner }}/ec-cube/feature/ab_testing/.github/workflows/mysql/Dockerfile -o .github/workflows/mysql/Dockerfile
+          if [ ! -f .github/workflows/mysql/Dockerfile ]; then
+            echo ".github/workflows/mysql/Dockerfile File not found!"
+          else
+            echo ".github/workflows/mysql/Dockerfile File found!"
+          fi
+      - name: Start Load EC-CUBE
+        run: |
+          sed -i 's!APP_ENV: "dev"!APP_ENV: "prod"!g' docker-compose.yml
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 120s
+        shell: bash
+      - name: Restart Load EC-CUBE to wait for MySQL
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml up -d
+      - name: Sleep for MySQL
+        run: sleep 30s
+        shell: bash
+      - name: Request home page - MYSQL NO PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-10000-home_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-10000-home_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-10000-home_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-10000-home_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-10000-home_5.txt
+          export MY_NO_PLUGIN_HOME_1="$(tail -n +23 mysql-no-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_2="$(tail -n +23 mysql-no-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_3="$(tail -n +23 mysql-no-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_4="$(tail -n +23 mysql-no-plugin-10000-home_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_5="$(tail -n +23 mysql-no-plugin-10000-home_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_HOME_RPS_1="$(tail -n +20 mysql-no-plugin-10000-home_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_2="$(tail -n +20 mysql-no-plugin-10000-home_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_3="$(tail -n +20 mysql-no-plugin-10000-home_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_4="$(tail -n +20 mysql-no-plugin-10000-home_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_HOME_RPS_5="$(tail -n +20 mysql-no-plugin-10000-home_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_NO_PLUGIN_HOME_1 + $MY_NO_PLUGIN_HOME_2 + $MY_NO_PLUGIN_HOME_3 + $MY_NO_PLUGIN_HOME_4 + $MY_NO_PLUGIN_HOME_5" | bc -l)
+          RPS_SUM=$(echo "$MY_NO_PLUGIN_HOME_RPS_1 + $MY_NO_PLUGIN_HOME_RPS_2 + $MY_NO_PLUGIN_HOME_RPS_3 + $MY_NO_PLUGIN_HOME_RPS_4 + $MY_NO_PLUGIN_HOME_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_NO_PLUGIN_10000_HOME_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_NO_PLUGIN_10000_HOME_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_NO_PLUGIN_10000_HOME_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_NO_PLUGIN_10000_HOME_RPS_RESULT}"
+           echo "MSQL_NO_PLUGIN_10000_HOME_RESULT=${MSQL_NO_PLUGIN_10000_HOME_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_NO_PLUGIN_10000_HOME_RPS_RESULT=${MSQL_NO_PLUGIN_10000_HOME_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Request list page - MYSQL NO PLUGIN 10000 PRODUCTS
+        run: |
+          sudo apt-get install apache2-utils
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-10000-list_1.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-10000-list_2.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-10000-list_3.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-10000-list_4.txt
+          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-10000-list_5.txt
+          export MY_NO_PLUGIN_LIST_1="$(tail -n +23 mysql-no-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_2="$(tail -n +23 mysql-no-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_3="$(tail -n +23 mysql-no-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_4="$(tail -n +23 mysql-no-plugin-10000-list_4.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_5="$(tail -n +23 mysql-no-plugin-10000-list_5.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
+          export MY_NO_PLUGIN_LIST_RPS_1="$(tail -n +20 mysql-no-plugin-10000-list_1.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_2="$(tail -n +20 mysql-no-plugin-10000-list_2.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_3="$(tail -n +20 mysql-no-plugin-10000-list_3.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_4="$(tail -n +20 mysql-no-plugin-10000-list_4.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          export MY_NO_PLUGIN_LIST_RPS_5="$(tail -n +20 mysql-no-plugin-10000-list_5.txt | grep -o -P '(?<=Requests per second:).*(?=\[#/sec\])')"
+          SUM=$(echo "$MY_NO_PLUGIN_LIST_1 + $MY_NO_PLUGIN_LIST_2 + $MY_NO_PLUGIN_LIST_3 + $MY_NO_PLUGIN_LIST_4 + $MY_NO_PLUGIN_LIST_5" | bc -l)
+          RPS_SUM=$(echo "$MY_NO_PLUGIN_LIST_RPS_1 + $MY_NO_PLUGIN_LIST_RPS_2 + $MY_NO_PLUGIN_LIST_RPS_3 + $MY_NO_PLUGIN_LIST_RPS_4 + $MY_NO_PLUGIN_LIST_RPS_5" | bc -l)
+          COUNT=5
+          export MSQL_NO_PLUGIN_10000_LIST_RESULT=$(echo "scale=4; 1.0 * $SUM / $COUNT" | bc -l)
+          export MSQL_NO_PLUGIN_10000_LIST_RPS_RESULT=$(echo "scale=4; 1.0 * $RPS_SUM / $COUNT" | bc -l)
+          echo "TIME PER REQUEST AVG: ${MSQL_NO_PLUGIN_10000_LIST_RESULT}"
+          echo "REQUESTS PER SECOND AVG: ${MSQL_NO_PLUGIN_10000_LIST_RPS_RESULT}"
+           echo "MSQL_NO_PLUGIN_10000_LIST_RESULT=${MSQL_NO_PLUGIN_10000_LIST_RESULT}" >> $GITHUB_ENV
+           echo "MSQL_NO_PLUGIN_10000_LIST_RPS_RESULT=${MSQL_NO_PLUGIN_10000_LIST_RPS_RESULT}" >> $GITHUB_ENV
+      - name: Drop MYSQL ECCUBE for 4.2.1-20230116
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml down -v
+      - name: 'Cleanup build folder'
+        run: |
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
+      - name: Bundle All Average Results to CSV
+        run: |
+          echo "Pattern, DB, Page, PLUGIN - TIME PER REQUEST, NO PLUGIN - TIME PER REQUEST, PLUGIN - REQUESTS PER SECOND,NO PLUGIN - REQUESTS PER SECOND" >> total.csv
+          echo "Base Install Result, PGSQL, TOP, ${PSQL_PLUGIN_BASE_HOME_RESULT}, ${PSQL_NO_PLUGIN_BASE_HOME_RESULT}, ${PSQL_PLUGIN_BASE_HOME_RPS_RESULT}, ${PSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}" >> total.csv
+          echo "Base Install Result, PGSQL, LIST, ${PSQL_PLUGIN_BASE_LIST_RESULT}, ${PSQL_NO_PLUGIN_BASE_LIST_RESULT}, ${PSQL_PLUGIN_BASE_LIST_RPS_RESULT}, ${PSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}" >> total.csv
+          echo "Base Install Result, MYSQL, TOP,  ${MSQL_PLUGIN_BASE_HOME_RESULT}, ${MSQL_NO_PLUGIN_BASE_HOME_RESULT}, ${MSQL_PLUGIN_BASE_HOME_RPS_RESULT},  ${MSQL_NO_PLUGIN_BASE_HOME_RPS_RESULT}" >> total.csv
+          echo "Base Install Result, MYSQL, LIST, $MSQL_PLUGIN_BASE_LIST_RESULT, ${MSQL_NO_PLUGIN_BASE_LIST_RESULT}, ${MSQL_PLUGIN_BASE_LIST_RPS_RESULT}, ${MSQL_NO_PLUGIN_BASE_LIST_RPS_RESULT}" >> total.csv
+          echo "10000 Product Result, PGSQL, TOP, ${PG_PLUGIN_10000_HOME_RESULT}, ${PG_NO_PLUGIN_10000_HOME_RESULT}, ${PG_PLUGIN_10000_HOME_RPS_RESULT}, ${PG_NO_PLUGIN_10000_HOME_RPS_RESULT}" >> total.csv
+          echo "10000 Product Result, PGSQL, LIST, ${PG_PLUGIN_10000_LIST_RESULT}, ${PG_NO_PLUGIN_10000_LIST_RESULT}, ${PG_PLUGIN_10000_LIST_RPS_RESULT}, ${PG_NO_PLUGIN_10000_LIST_RPS_RESULT}" >> total.csv
+          echo "10000 Product Result, MYSQL, TOP, ${MSQL_PLUGIN_10000_HOME_RESULT}, ${MSQL_NO_PLUGIN_10000_HOME_RESULT}, ${MSQL_PLUGIN_10000_HOME_RPS_RESULT}, ${MSQL_NO_PLUGIN_10000_HOME_RPS_RESULT}" >> total.csv
+          echo "10000 Product Result, MYSQL, LIST, ${MSQL_PLUGIN_10000_LIST_RESULT}, ${MSQL_NO_PLUGIN_10000_LIST_RESULT}, ${MSQL_PLUGIN_10000_LIST_RPS_RESULT},  ${MSQL_NO_PLUGIN_10000_LIST_RPS_RESULT}" >> total.csv
+      # Upload Evidence
+      ## FINALISE
+      - name: Upload complete evidence (ALL)
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: ab-${{ env.ARTIFACT_NAME }}-complete
+          path: total.csv

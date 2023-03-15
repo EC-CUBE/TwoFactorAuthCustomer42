@@ -18,9 +18,6 @@ use Eccube\Entity\Layout;
 use Eccube\Entity\Page;
 use Eccube\Entity\PageLayout;
 use Eccube\Plugin\AbstractPluginManager;
-use Eccube\Repository\LayoutRepository;
-use Eccube\Repository\PageLayoutRepository;
-use Eccube\Repository\PageRepository;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
@@ -81,7 +78,7 @@ class PluginManager extends AbstractPluginManager
 
     /**
      * Twigファイルの登録
-     * 
+     *
      * @param ContainerInterface $container
      */
     protected function copyTwigFiles(ContainerInterface $container)
@@ -97,9 +94,9 @@ class PluginManager extends AbstractPluginManager
         $fs->mirror(__DIR__.'/Resource/template/default', $templatePath);
     }
 
-    /** 
+    /**
      * ページ情報の登録
-     * 
+     *
      * @param EntityManagerInterface $em
      */
     protected function createPages(EntityManagerInterface $em)
@@ -114,10 +111,10 @@ class PluginManager extends AbstractPluginManager
                 $Page->setName($p[1]);
                 $Page->setFileName($p[2]);
                 $Page->setMetaRobots('noindex');
-    
+
                 $em->persist($Page);
                 $em->flush();
-    
+
                 $Layout = $em->getRepository(Layout::class)->find(Layout::DEFAULT_LAYOUT_UNDERLAYER_PAGE);
                 $PageLayout = new PageLayout();
                 $PageLayout->setPage($Page)
@@ -133,7 +130,7 @@ class PluginManager extends AbstractPluginManager
 
     /**
      * Twigファイルの削除
-     * 
+     *
      * @param ContainerInterface $container
      */
     protected function removeTwigFiles(ContainerInterface $container)
@@ -144,9 +141,9 @@ class PluginManager extends AbstractPluginManager
         $fs->remove($templatePath);
     }
 
-    /** 
+    /**
      * ページ情報の削除
-     * 
+     *
      * @param EntityManagerInterface $em
      */
     protected function removePages(EntityManagerInterface $em)
@@ -173,27 +170,13 @@ class PluginManager extends AbstractPluginManager
     {
         $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
         if ($TwoFactorAuthConfig) {
-            return $TwoFactorAuthConfig;
+            return;
         }
 
         // 初期値を保存
         $TwoFactorAuthConfig = new TwoFactorAuthConfig();
-
-        // TODO:削除
-        $TwoFactorAuthConfig
-            ->setApiKey("ACae86d0224d3c0fbdb292bb7e6d467bcb")
-            ->setApiSecret("1cb986b95fbfd67f1d71ec80b6c31195")
-            ->setFromTel("18563862532")
-        ;
-
-        // 除外ルートの登録
-        foreach ($this->pages as $p) {
-            $TwoFactorAuthConfig->addExcludeRoute($p[0]);
-        }
         $em->persist($TwoFactorAuthConfig);
         $em->flush();
-
-        return;
-    }    
+    }
 
 }

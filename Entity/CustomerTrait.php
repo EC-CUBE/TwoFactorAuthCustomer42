@@ -1,10 +1,21 @@
 <?php
 
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
-use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthType;
 
 /**
  * @EntityExtension("Eccube\Entity\Customer")
@@ -14,9 +25,9 @@ trait CustomerTrait
     /**
      * @var ?string
      *
-     * @ORM\Column(name="device_auth_one_time_token", type="string", length=10, nullable=true)
+     * @ORM\Column(name="device_auth_one_time_token", type="string", length=255, nullable=true)
      */
-    private ?string $device_auth_one_time_token;
+    private ?string $device_auth_one_time_token = null;
 
     /**
      * @var \DateTime|null
@@ -37,22 +48,16 @@ trait CustomerTrait
      *
      * @ORM\Column(name="device_authed_phone_number", type="string", length=14, nullable=true)
      */
-    private $device_authed_phone_number;
+    private ?string $device_authed_phone_number = null;
 
     /**
-     * @var boolean
-     *
-     * @ORM\Column(name="two_factor_auth", type="boolean", nullable=false, options={"default":false})
-     */
-    private bool $two_factor_auth = false;
-
-    /**
-     * TODO: 2FATypeへ
      * 2段階認証機能の設定
+     *
      * @var int
+     *
      * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
-    private ?int $two_factor_auth_type;
+    private ?int $two_factor_auth_type = null;
 
     /**
      * @var TwoFactorAuthType
@@ -62,24 +67,26 @@ trait CustomerTrait
      *   @ORM\JoinColumn(name="two_factor_auth_type_id", referencedColumnName="id")
      * })
      */
-    private $TwoFactorAuthType;
+    private $TwoFactorAuthType = null;
 
     /**
-     * @return string
+     * @var Collection
+     *
+     * @ORM\OneToMany(targetEntity="\Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie", mappedBy="Customer")
      */
-    public function createDeviceAuthOneTimeToken(): ?string
+    private $TwoFactorAuthCustomerCookies;
+
+    /**
+     * @param string $hashedOneTimePassword
+     *
+     * @return void
+     */
+    public function createDeviceAuthOneTimeToken(string $hashedOneTimePassword): void
     {
         $now = new \DateTime();
 
-        // TODO: なんちゃって
-        $token = '';
-        for ($i = 0; $i < 6; $i++) {
-            $token .= (string)rand(0, 9);
-        }
-
-        $this->setDeviceAuthOneTimeToken($token);
+        $this->setDeviceAuthOneTimeToken($hashedOneTimePassword);
         $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
-        return $token;
     }
 
     /**
@@ -147,35 +154,17 @@ trait CustomerTrait
     }
 
     /**
-     * @param string $device_authed_phone_number
+     * @param string|null $device_authed_phone_number
      */
-    public function setDeviceAuthedPhoneNumber(string $device_authed_phone_number): void
+    public function setDeviceAuthedPhoneNumber(?string $device_authed_phone_number): void
     {
         $this->device_authed_phone_number = $device_authed_phone_number;
     }
 
     /**
-     * @return bool
-     */
-    public function isTwoFactorAuth(): bool
-    {
-        return $this->two_factor_auth;
-    }
-
-    /**
-     * @param bool $two_factor_auth
-     */
-    public function setTwoFactorAuth(bool $two_factor_auth): void
-    {
-        $this->two_factor_auth = $two_factor_auth;
-    }
-
-    /**
-     * Set two factor auth type.
+     * Set two-factor auth type.
      *
-     * @param TwoFactorAuthType|null $sex
-     *
-     * @return Customer
+     * @param TwoFactorAuthType|null $twoFactorAuthType
      */
     public function setTwoFactorAuthType(TwoFactorAuthType $twoFactorAuthType = null)
     {
@@ -194,4 +183,19 @@ trait CustomerTrait
         return $this->TwoFactorAuthType;
     }
 
+    /**
+     * @return Collection
+     */
+    public function getTwoFactorAuthCustomerCookies(): Collection
+    {
+        return $this->TwoFactorAuthCustomerCookies;
+    }
+
+    /**
+     * @param Collection $TwoFactorAuthCustomerCookies
+     */
+    public function setTwoFactorAuthCustomerCookies(Collection $TwoFactorAuthCustomerCookies): void
+    {
+        $this->TwoFactorAuthCustomerCookies = $TwoFactorAuthCustomerCookies;
+    }
 }
