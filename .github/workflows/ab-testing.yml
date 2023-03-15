@@ -571,11 +571,11 @@ jobs:
       - name: Request home page - PGSQL PLUGIN BASE
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-plugin-home_5.txt
           export PG_4_1_HOME_1="$(tail -n +23 pg-plugin-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_4_1_HOME_2="$(tail -n +23 pg-plugin-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_4_1_HOME_3="$(tail -n +23 pg-plugin-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -598,11 +598,11 @@ jobs:
       - name: Request list page - PGSQL PLUGIN BASE
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-plugin-base-list_5.txt
           export PG_4_1_LIST_1="$(tail -n +23 pg-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_4_1_LIST_2="$(tail -n +23 pg-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_4_1_LIST_3="$(tail -n +23 pg-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -648,11 +648,11 @@ jobs:
       - name: Request home page - PGSQL NO PLUGIN BASE
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > pg-no-plugin-10000-home_5.txt
           export PG_NO_PLUGIN_BASE_HOME_1="$(tail -n +23 pg-no-plugin-10000-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_NO_PLUGIN_BASE_HOME_2="$(tail -n +23 pg-no-plugin-10000-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_NO_PLUGIN_BASE_HOME_3="$(tail -n +23 pg-no-plugin-10000-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -675,11 +675,11 @@ jobs:
       - name: Request list page - PGSQL NO PLUGIN BASE
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > pg-no-plugin-10000-list_5.txt
           export PG_NO_PLUGIN_BASE_LIST_1="$(tail -n +23 pg-no-plugin-10000-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_NO_PLUGIN_BASE_LIST_2="$(tail -n +23 pg-no-plugin-10000-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export PG_NO_PLUGIN_BASE_LIST_3="$(tail -n +23 pg-no-plugin-10000-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -757,11 +757,11 @@ jobs:
       - name: Request home page
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-plugin-base-home_5.txt
           export MY_PLUGIN_HOME_BASE_1="$(tail -n +23 mysql-plugin-base-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_PLUGIN_HOME_BASE_2="$(tail -n +23 mysql-plugin-base-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_PLUGIN_HOME_BASE_3="$(tail -n +23 mysql-plugin-base-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -784,11 +784,11 @@ jobs:
       - name: Request list page
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-plugin-base-list_5.txt
           export MY_PLUGIN_BASE_LIST_1="$(tail -n +23 mysql-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_PLUGIN_BASE_LIST_2="$(tail -n +23 mysql-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_PLUGIN_BASE_LIST_3="$(tail -n +23 mysql-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -834,11 +834,11 @@ jobs:
       - name: Request home page
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/ > mysql-no-plugin-base-home_5.txt
           export MY_NO_PLUGIN_HOME_1="$(tail -n +23 mysql-no-plugin-base-home_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_NO_PLUGIN_HOME_2="$(tail -n +23 mysql-no-plugin-base-home_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_NO_PLUGIN_HOME_3="$(tail -n +23 mysql-no-plugin-base-home_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
@@ -861,11 +861,11 @@ jobs:
       - name: Request list page
         run: |
           sudo apt-get install apache2-utils
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_1.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_2.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_3.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_4.txt
-          ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_5.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_1.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_2.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_3.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_4.txt
+          sudo ab -n 100 -c 10 -l http://localhost:8080/products/list > mysql-no-plugin-base-list_5.txt
           export MY_NO_PLUGIN_LIST_1="$(tail -n +23 mysql-no-plugin-base-list_1.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_NO_PLUGIN_LIST_2="$(tail -n +23 mysql-no-plugin-base-list_2.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
           export MY_NO_PLUGIN_LIST_3="$(tail -n +23 mysql-no-plugin-base-list_3.txt | grep -o -P '(?<=:).*(?=\[ms\])')"
