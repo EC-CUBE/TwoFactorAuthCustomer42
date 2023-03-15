@@ -67,13 +67,6 @@ class TwoFactorAuthConfig extends AbstractEntity
     private $include_routes = null;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="exclude_routes", type="text", nullable=true)
-     */
-    private $exclude_routes = null;
-
-    /**
      * Constructor.
      */
     public function __construct()
@@ -163,30 +156,6 @@ class TwoFactorAuthConfig extends AbstractEntity
     }
 
     /**
-     * Set exclude_routes.
-     *
-     * @param string|null $exclude_routes
-     *
-     * @return TwoFactorAuthConfig
-     */
-    public function setExcludeRoutes($exclude_routes = null)
-    {
-        $this->exclude_routes = $exclude_routes;
-
-        return $this;
-    }
-
-    /**
-     * Get exclude_routes.
-     *
-     * @return string|null
-     */
-    public function getExcludeRoutes()
-    {
-        return $this->exclude_routes;
-    }
-
-    /**
      * Set include_routes.
      *
      * @param string|null $include_routes
@@ -199,7 +168,6 @@ class TwoFactorAuthConfig extends AbstractEntity
 
         return $this;
     }
-
     /**
      * Get include_routes.
      *
@@ -228,29 +196,6 @@ class TwoFactorAuthConfig extends AbstractEntity
         if (in_array($route, $routes)) {
             $routes = array_splice($routes, array_search($route, $routes, true), 1);
             $this->setIncludeRoutes($this->getRoutesAsString($routes));
-        }
-
-        return $this;
-    }
-
-    public function addExcludeRoute(string $route)
-    {
-        $routes = $this->getRoutes($this->getExcludeRoutes());
-
-        if (!in_array($route, $routes)) {
-            $this->setExcludeRoutes($this->exclude_routes.PHP_EOL.$route);
-        }
-
-        return $this;
-    }
-
-    public function removeExcludeRoute(string $route)
-    {
-        $routes = $this->getRoutes($this->getExcludeRoutes());
-
-        if (in_array($route, $routes)) {
-            $routes = array_diff($routes, [$route]);
-            $this->setExcludeRoutes($this->getRoutesAsString($routes));
         }
 
         return $this;

@@ -90,11 +90,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     protected $session;
 
     /**
-     * 除外ルート.
-     */
-    protected $exclude_routes;
-
-    /**
      * 通常（ログイン・マイページ）ルート.
      */
     protected $default_routes;
@@ -137,7 +132,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->session = $session;
 
-        $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
         $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
     }

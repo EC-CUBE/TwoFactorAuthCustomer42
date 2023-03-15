@@ -477,22 +477,6 @@ class CustomerTwoFactorAuthService
     }
 
     /**
-     * 認証除外ルートを取得.
-     *
-     * @return array
-     */
-    public function getExcludeRoutes(): array
-    {
-        $routes = [];
-        $include = $this->twoFactorAuthConfig->getExcludeRoutes();
-        if ($include) {
-            $routes = preg_split('/\R/', $include);
-        }
-
-        return $routes;
-    }
-
-    /**
      * ２段階認証に関係しているクッキーだけを消す
      *
      * @param Request $request

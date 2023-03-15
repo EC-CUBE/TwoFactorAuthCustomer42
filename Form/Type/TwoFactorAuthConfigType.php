@@ -19,11 +19,6 @@ class TwoFactorAuthConfigType extends AbstractType
     protected $eccubeConfig;
 
     /**
-     * @var ContainerInterface
-     */
-    protected $containerInterface;
-
-    /**
      * TwoFactorAuthConfigType constructor.
      *
      * @param EccubeConfig $eccubeConfig
@@ -77,14 +72,6 @@ class TwoFactorAuthConfigType extends AbstractType
                 ],
             ])
             ->add('include_routes', TextareaType::class, [
-                'required' => false,
-                'constraints' => [
-                    new Assert\Length([
-                        'max' => $this->eccubeConfig['eccube_ltext_len'],
-                    ]),
-                ],
-            ])
-            ->add('exclude_routes', TextareaType::class, [
                 'required' => false,
                 'constraints' => [
                     new Assert\Length([

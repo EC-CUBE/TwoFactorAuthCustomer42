@@ -87,11 +87,6 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
     protected $session;
 
     /**
-     * 除外ルート.
-     */
-    protected $exclude_routes;
-
-    /**
      * 個別認証ルート.
      */
     protected $include_routes;
@@ -130,7 +125,6 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
         $this->session = $session;
 
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
-        $this->exclude_routes = $this->customerTwoFactorAuthService->getExcludeRoutes();
     }
 
     /**
