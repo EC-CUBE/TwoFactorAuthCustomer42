@@ -51,7 +51,6 @@ trait CustomerTrait
     private ?string $device_authed_phone_number = null;
 
     /**
-     * TODO: 2FATypeへ
      * 2段階認証機能の設定
      *
      * @var int
