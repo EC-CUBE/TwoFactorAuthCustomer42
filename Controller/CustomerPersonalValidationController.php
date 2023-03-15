@@ -102,6 +102,7 @@ class CustomerPersonalValidationController extends AbstractController
                     if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
                         $Customer->setDeviceAuthed(true);
                         $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
+                        $Customer->setDeviceAuthOneTimeToken(null);
                         $Customer->setDeviceAuthOneTimeTokenExpire(null);
                         $this->entityManager->persist($Customer);
                         $this->entityManager->flush();
