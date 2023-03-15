@@ -91,8 +91,8 @@ class CustomerPersonalValidationController extends AbstractController
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
-            $token = $form->get('one_time_token')->getData();
             if ($form->isSubmitted() && $form->isValid()) {
+                $token = $form->get('one_time_token')->getData();
                 if (!$this->checkDeviceToken($Customer, $token)) {
                     // ワンタイムトークン不一致 or 有効期限切れ
                     $error = trans('front.2fa.onetime.invalid_message__reinput');
@@ -171,9 +171,9 @@ class CustomerPersonalValidationController extends AbstractController
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
-            $phoneNumber = $form->get('phone_number')->getData();
             if ($form->isSubmitted() && $form->isValid()) {
                 // 他のデバイスで既に認証済みの電話番号かチェック
+                $phoneNumber = $form->get('phone_number')->getData();
                 if ($this->customerRepository->findBy(['device_authed_phone_number' => $phoneNumber]) == null) {
                     // 認証されていない電話番号の場合
                     // 入力電話番号へワンタイムコードを送信

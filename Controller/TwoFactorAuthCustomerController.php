@@ -77,9 +77,9 @@ class TwoFactorAuthCustomerController extends AbstractController
         if ('POST' === $request->getMethod()) {
             $form = $builder->getForm();
             $form->handleRequest($request);
-            $TwoFactorAuthType = $form->get('two_factor_auth_type')->getData();
             if ($form->isSubmitted() && $form->isValid()) {
                 // 選択された2段階認証方式を更新
+                $TwoFactorAuthType = $form->get('two_factor_auth_type')->getData();
                 $Customer->setTwoFactorAuthType($TwoFactorAuthType);
                 // 2段階認証を有効に更新
                 $this->entityManager->persist($Customer);
