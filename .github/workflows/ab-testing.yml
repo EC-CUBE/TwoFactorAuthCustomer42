@@ -120,10 +120,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # PGSQL
       # BASE PRODUCTS
       # NO PLUGIN
@@ -203,10 +203,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.dev.yml -f docker-compose.pgsql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # MYSQL
       # BASE PRODUCTS
       # PLUGIN
@@ -315,10 +315,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo  ls -la ./
+          sudo  rm -rf ./* || true
+          sudo  rm -rf ./.??* || true
+          sudo  ls -la ./
       # MYSQL
       # BASE PRODUCTS
       # NO PLUGIN
@@ -395,10 +395,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.mysql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # POSTGRES SQL
       # 10,000 PRODUCTS
       # PLUGIN
@@ -533,10 +533,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # POSTGRES SQL
       # 10,000 PRODUCTS
       # NO PLUGIN
@@ -639,10 +639,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.pgsql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # MYSQL SQL
       # 10,000 PRODUCTS
       # PLUGIN
@@ -814,10 +814,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       # MYSQL SQL
       # 10,000 PRODUCTS
       # NO PLUGIN
@@ -922,10 +922,10 @@ jobs:
           docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.bench.mysql.yml down -v
       - name: 'Cleanup build folder'
         run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
+          sudo ls -la ./
+          sudo rm -rf ./* || true
+          sudo rm -rf ./.??* || true
+          sudo ls -la ./
       - name: Bundle All Average Results to CSV
         run: |
           echo "Pattern, DB, Page, PLUGIN - TIME PER REQUEST, NO PLUGIN - TIME PER REQUEST, PLUGIN - REQUESTS PER SECOND,NO PLUGIN - REQUESTS PER SECOND" >> total.csv
