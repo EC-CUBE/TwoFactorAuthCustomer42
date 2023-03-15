@@ -107,7 +107,7 @@ class CustomerPersonalValidationController extends AbstractController
                         $this->entityManager->persist($Customer);
                         $this->entityManager->flush();
                         $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
-    
+
                         // アクティベーション実行
                         return $this->redirectToRoute(
                             'entry_activate',

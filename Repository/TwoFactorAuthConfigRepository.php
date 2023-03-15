@@ -13,8 +13,8 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Repository;
 
-use Eccube\Repository\AbstractRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Eccube\Repository\AbstractRepository;
 use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 
 /**

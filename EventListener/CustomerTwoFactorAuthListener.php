@@ -233,6 +233,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * ログアウトする前に全ての2FA認証クッキーを消す
      *
      * @param LogoutEvent $logoutEvent ログアウトイベント
+     *
      * @return void
      */
     public function logoutEvent(LogoutEvent $logoutEvent)

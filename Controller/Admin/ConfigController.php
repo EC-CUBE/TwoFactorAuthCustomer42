@@ -14,7 +14,6 @@
 namespace Plugin\TwoFactorAuthCustomer42\Controller\Admin;
 
 use Eccube\Controller\AbstractController;
-use Eccube\Repository\BaseInfoRepository;
 use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthConfigType;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;

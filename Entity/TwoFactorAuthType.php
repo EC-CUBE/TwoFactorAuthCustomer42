@@ -15,7 +15,6 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Entity\AbstractEntity;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
@@ -140,5 +139,4 @@ class TwoFactorAuthType extends AbstractEntity
     {
         $this->isDisabled = $isDisabled;
     }
-
 }
