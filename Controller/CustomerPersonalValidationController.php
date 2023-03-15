@@ -1,0 +1,279 @@
+<?php
+
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Plugin\TwoFactorAuthCustomer42\Controller;
+
+use Eccube\Controller\AbstractController;
+use Eccube\Entity\Customer;
+use Eccube\Repository\CustomerRepository;
+use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthPhoneNumberTypeCustomer;
+use Plugin\TwoFactorAuthCustomer42\Form\Type\TwoFactorAuthSmsTypeCustomer;
+use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\Routing\Annotation\Route;
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use Twilio\Rest\Api\V2010\Account\MessageInstance;
+
+class CustomerPersonalValidationController extends AbstractController
+{
+    /**
+     * @var CustomerRepository
+     */
+    protected CustomerRepository $customerRepository;
+
+    /**
+     * @var CustomerTwoFactorAuthService
+     */
+    protected CustomerTwoFactorAuthService $customerTwoFactorAuthService;
+
+    /**
+     * @var Environment
+     */
+    protected Environment $twig;
+
+    /**
+     * TwoFactorAuthCustomerController constructor.
+     *
+     * @param CustomerRepository $customerRepository,
+     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService,
+     * @param Environment       $twig
+     */
+    public function __construct(
+        CustomerRepository $customerRepository,
+        CustomerTwoFactorAuthService $customerTwoFactorAuthService,
+        Environment $twig
+    ) {
+        $this->customerRepository = $customerRepository;
+        $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
+        $this->twig = $twig;
+    }
+
+    /**
+     * (デバイス認証時)デバイス認証ワンタイムトークン入力画面.
+     *
+     * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", methods={"GET", "POST"})
+     * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/input.twig")
+     *
+     * @param Request $request
+     * @param $secret_key
+     *
+     * @return array|RedirectResponse
+     */
+    public function deviceAuthInputOneTime(Request $request, $secret_key)
+    {
+        if ($this->isDeviceAuthed()) {
+            // 認証済みならばマイページへ
+            return $this->redirectToRoute('mypage');
+        }
+
+        $error = null;
+        /** @var Customer $Customer */
+        $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
+        $builder = $this->formFactory->createBuilder(TwoFactorAuthSmsTypeCustomer::class);
+        $form = null;
+        // 入力フォーム生成
+        $form = $builder->getForm();
+        if ('POST' === $request->getMethod()) {
+            $form->handleRequest($request);
+            $token = $form->get('one_time_token')->getData();
+            if ($form->isSubmitted() && $form->isValid()) {
+                if (!$this->checkDeviceToken($Customer, $token)) {
+                    // ワンタイムトークン不一致 or 有効期限切れ
+                    $error = trans('front.2fa.onetime.invalid_message__reinput');
+                } else {
+                    // 送信電話番号をセッションより取得
+                    $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
+                    // ワンタイムトークン一致
+                    // デバイス認証完了
+                    if ($Customer->getDeviceAuthedPhoneNumber() === $phoneNumber) {
+                        // 既に認証済みの電話番号の場合は、更新しない
+                        $response = new RedirectResponse(
+                            $this->generateUrl(
+                                'entry_activate',
+                                ['secret_key' => $secret_key]
+                            )
+                        );
+
+                        return $response;
+                    }
+
+                    $Customer->setDeviceAuthed(true);
+                    $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
+                    $Customer->setDeviceAuthOneTimeTokenExpire(null);
+                    $this->entityManager->persist($Customer);
+                    $this->entityManager->flush();
+                    $this->session->remove(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
+
+                    // アクティベーション実行
+                    $response = new RedirectResponse(
+                        $this->generateUrl(
+                            'entry_activate',
+                            ['secret_key' => $secret_key]
+                        )
+                    );
+
+                    return $response;
+                }
+            } else {
+                $error = trans('front.2fa.onetime.invalid_message__reinput');
+            }
+        }
+
+        return [
+            'form' => $form->createView(),
+            'secret_key' => $secret_key,
+            'Customer' => $Customer,
+            'error' => $error,
+        ];
+    }
+
+    /**
+     * (デバイス認証時)デバイス認証 送信先入力画面.
+     *
+     * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", methods={"GET", "POST"})
+     * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/send.twig")
+     *
+     * @param Request $request
+     * @param $secret_key
+     *
+     * @return array|RedirectResponse
+     */
+    public function deviceAuthSendOneTime(Request $request, $secret_key)
+    {
+        if ($this->isDeviceAuthed()) {
+            // 認証済みならばマイページへ
+            return $this->redirectToRoute('mypage');
+        }
+
+        $error = null;
+        /** @var Customer $Customer */
+        $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
+        $builder = $this->formFactory->createBuilder(TwoFactorAuthPhoneNumberTypeCustomer::class);
+        $form = null;
+        $auth_key = null;
+        // 入力フォーム生成
+        $form = $builder->getForm();
+        if ('POST' === $request->getMethod()) {
+            $form->handleRequest($request);
+            $phoneNumber = $form->get('phone_number')->getData();
+            if ($form->isSubmitted() && $form->isValid()) {
+                // 他のデバイスで既に認証済みの電話番号かチェック
+                if ($this->customerRepository->findBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                    // 認証されていない電話番号の場合
+                    // 入力電話番号へワンタイムコードを送信
+                    $this->sendDeviceToken($Customer, $phoneNumber);
+                    // 送信電話番号をセッションへ一時格納
+                    $this->session->set(
+                        CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER,
+                        $phoneNumber
+                    );
+                } else {
+                    log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
+                }
+                $response = new RedirectResponse(
+                    $this->generateUrl(
+                        'plg_customer_2fa_device_auth_input_onetime',
+                        ['secret_key' => $secret_key]
+                    )
+                );
+
+                return $response;
+            } else {
+                $error = trans('front.2fa.sms.send.failure_message');
+            }
+        }
+
+        return [
+            'form' => $form->createView(),
+            'secret_key' => $secret_key,
+            'Customer' => $Customer,
+            'error' => $error,
+        ];
+    }
+
+    /**
+     * デバイス認証用のワンタイムトークンを送信.
+     *
+     * @param Customer $Customer
+     * @param string $phoneNumber
+     *
+     * @return MessageInstance
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    private function sendDeviceToken(Customer $Customer, string $phoneNumber)
+    {
+        // ワンタイムトークン生成・保存
+        $token = $this->customerTwoFactorAuthService->generateOneTimeToken();
+        $Customer->createDeviceAuthOneTimeToken($this->customerTwoFactorAuthService->hashOneTimeToken($token));
+
+        $this->entityManager->persist($Customer);
+        $this->entityManager->flush();
+
+        // ワンタイムトークン送信メッセージをレンダリング
+        $twig = 'TwoFactorAuthCustomer42/Resource/template/default/sms/onetime_message.twig';
+        $body = $this->twig->render($twig, [
+            'Customer' => $Customer,
+            'token' => $token,
+        ]);
+
+        // SMS送信
+        return $this->customerTwoFactorAuthService->sendBySms($Customer, $phoneNumber, $body);
+    }
+
+    /**
+     * デバイス認証用のワンタイムトークンチェック.
+     *
+     * @param $Customer
+     * @param $token
+     *
+     * @return boolean
+     */
+    private function checkDeviceToken($Customer, $token): bool
+    {
+        $now = new \DateTime();
+
+        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
+        if (
+            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
+            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * デバイス認証済みか否か.
+     *
+     * @return boolean
+     */
+    protected function isDeviceAuthed(): bool
+    {
+        /** @var Customer $Customer */
+        $Customer = $this->getUser();
+        if ($Customer != null && $Customer->isDeviceAuthed()) {
+            return true;
+        }
+
+        return false;
+    }
+}

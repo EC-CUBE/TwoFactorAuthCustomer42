@@ -26,6 +26,7 @@ use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 class CustomerTwoFactorAuthService
@@ -147,6 +148,11 @@ class CustomerTwoFactorAuthService
     private TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository;
 
     /**
+     * @var PasswordHasherFactoryInterface
+     */
+    private PasswordHasherFactoryInterface $hashFactory;
+
+    /**
      * @return array
      */
     public function getDefaultAuthRoutes()
@@ -182,7 +188,8 @@ class CustomerTwoFactorAuthService
         RequestStack $requestStack,
         BaseInfoRepository $baseInfoRepository,
         TwoFactorAuthConfigRepository $twoFactorAuthConfigRepository,
-        TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository
+        TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository,
+        PasswordHasherFactoryInterface $hashFactory
     ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
@@ -211,6 +218,7 @@ class CustomerTwoFactorAuthService
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
         $this->twoFactorCustomerCookieRepository = $twoFactorCustomerCookieRepository;
+        $this->hashFactory = $hashFactory;
     }
 
     /**
@@ -421,6 +429,33 @@ class CustomerTwoFactorAuthService
                 $response->headers->clearCookie($key);
             }
         }
+    }
+
+    public function generateOneTimeToken(): string
+    {
+        $token = '';
+        for ($i = 0; $i < 6; $i++) {
+            $token .= (string) random_int(0, 9);
+        }
+
+        return $token;
+    }
+
+    /***
+     * @param string $input
+     * @return string
+     */
+    public function readOneTimeToken(string $input): string
+    {
+        $passwordEncoder = $this->hashFactory->getPasswordHasher(Customer::class);
+
+        return $passwordEncoder->hash($input);
+    }
+
+    public function hashOneTimeToken($token): string
+    {
+        // ハッシュジェネレーターをエンティティに持って来る
+        return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
     }
 
     /***
