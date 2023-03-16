@@ -12,6 +12,24 @@ file that was distributed with this source code.
 
 {% set body_class = 'mypage' %}
 
+{% block stylesheet %}
+<style>
+.ec-login-header {
+    background: #FFFFFF;
+}
+.ec-login-header > p {
+    text-align: center;
+    font: var(--unnamed-font-style-normal) normal medium 16px/22px YuGothic;
+    letter-spacing: var(--unnamed-character-spacing-0);
+    text-align: center;
+    font: normal normal medium 16px/22px YuGothic;
+    letter-spacing: 0px;
+    color: #525263;
+    opacity: 1;
+}
+</style>
+{% endblock %}
+
 {% block main %}
     <div class="ec-role">
         <div class="ec-pageHeader">
@@ -25,14 +43,16 @@ file that was distributed with this source code.
                             <input type="hidden" name="_target_path" value="{{ targetPath }}" />
                         {% endfor %}
                     {% endif %}
+                    <div class="ec-login ec-login-header">
+                        <p>{{ 'front.2fa.device_auth.send.message'|trans|nl2br }}</p>
+                    </div>
                     <div class="ec-login">
                         <div class="ec-login__icon">
                             <div class="ec-icon"><img src="{{ asset('assets/icon/user.svg') }}" alt=""></div>
                         </div>
-                        <p>{{ 'front.2fa.device_auth.send.message'|trans }}</p>
                         <div class="ec-login__input">
                             <div class="ec-input">
-                                {{ form_widget(form.phone_number, {'attr': {'style' : 'ime-mode: disabled;', 'placeholder' : '', 'autofocus': true}}) }}
+                                {{ form_widget(form.phone_number, {'attr': {'style' : 'ime-mode: disabled;', 'placeholder' : 'front.2fa.sms.phone.place_holder', 'autofocus': true}}) }}
                             </div>
                             {% if error %}
                                 <p class="ec-errorMessage">{{ error|nl2br }}</p>
