@@ -66,7 +66,7 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * (デバイス認証時)デバイス認証ワンタイムトークン入力画面.
      *
-     * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", methods={"GET", "POST"})
+     * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", requirements={"secret_key" = "^[a-zA-Z0-9]+$"}, methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/input.twig")
      *
      * @param Request $request
@@ -134,7 +134,7 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * (デバイス認証時)デバイス認証 送信先入力画面.
      *
-     * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", methods={"GET", "POST"})
+     * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", requirements={"secret_key" = "^[a-zA-Z0-9]+$"}, methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/send.twig")
      *
      * @param Request $request
