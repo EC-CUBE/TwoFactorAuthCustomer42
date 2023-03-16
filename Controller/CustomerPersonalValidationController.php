@@ -102,7 +102,7 @@ class CustomerPersonalValidationController extends AbstractController
                     // 送信電話番号をセッションより取得
                     $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
                     // 他のデバイスで既に認証済みの電話番号かチェック
-                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
                         $Customer->setDeviceAuthed(true);
                         $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
                         $Customer->setDeviceAuthOneTimeToken(null);
@@ -166,7 +166,7 @@ class CustomerPersonalValidationController extends AbstractController
             if ($form->isSubmitted() && $form->isValid()) {
                 // 他のデバイスで既に認証済みの電話番号かチェック
                 $phoneNumber = $form->get('phone_number')->getData();
-                if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
                     // 認証されていない電話番号の場合
                     // 入力電話番号へワンタイムコードを送信
                     $this->sendDeviceToken($Customer, $phoneNumber);
