@@ -101,8 +101,9 @@ class CustomerPersonalValidationController extends AbstractController
                     // ワンタイムトークン一致
                     // 送信電話番号をセッションより取得
                     $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
-                    // 他のデバイスで既に認証済みの電話番号かチェック
+                    // 認証済みの電話番号でないかチェック
                     if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
+                        // 未認証であれば登録
                         $Customer->setDeviceAuthed(true);
                         $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
                         $Customer->setDeviceAuthOneTimeToken(null);
@@ -117,6 +118,7 @@ class CustomerPersonalValidationController extends AbstractController
                             ['secret_key' => $secret_key]
                         );
                     } else {
+                        // 認証済の場合はスキップ
                         log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                         $error = trans('front.2fa.onetime.invalid_message__reinput');
                     }
@@ -164,11 +166,10 @@ class CustomerPersonalValidationController extends AbstractController
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
-                // 他のデバイスで既に認証済みの電話番号かチェック
+                // 認証済みの電話番号でないかチェック
                 $phoneNumber = $form->get('phone_number')->getData();
                 if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
-                    // 認証されていない電話番号の場合
-                    // 入力電話番号へワンタイムコードを送信
+                    // 未認証の場合、入力電話番号へワンタイムコードを送信
                     $this->sendDeviceToken($Customer, $phoneNumber);
                     // 送信電話番号をセッションへ一時格納
                     $this->session->set(
@@ -176,6 +177,7 @@ class CustomerPersonalValidationController extends AbstractController
                         $phoneNumber
                     );
                 } else {
+                    // 認証済の場合はスキップ
                     log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                 }
 
