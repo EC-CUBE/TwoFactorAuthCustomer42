@@ -57,7 +57,13 @@ class PluginManager extends AbstractPluginManager
      */
     public function disable(array $meta, ContainerInterface $container)
     {
+        $em = $container->get('doctrine')->getManager();
 
+        // twigファイルを削除
+        $this->removeTwigFiles($container);
+
+        // ページ削除
+        $this->removePages($em);
     }
 
     /**
@@ -149,7 +155,7 @@ class PluginManager extends AbstractPluginManager
     {
         foreach ($this->pages as $p) {
             $Page = $em->getRepository(Page::class)->findOneBy(['url' => $p[0]]);
-            if (!$Page) {
+            if (!empty($Page)) {
                 $Layout = $em->getRepository(Layout::class)->find(Layout::DEFAULT_LAYOUT_UNDERLAYER_PAGE);
                 $PageLayout = $em->getRepository(PageLayout::class)->findOneBy(['Page' => $Page, 'Layout' => $Layout]);
 
