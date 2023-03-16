@@ -249,20 +249,4 @@ class CustomerPersonalValidationController extends AbstractController
 
         return true;
     }
-
-    /**
-     * デバイス認証済みか否か.
-     *
-     * @return boolean
-     */
-    protected function isDeviceAuthed(): bool
-    {
-        /** @var Customer $Customer */
-        $Customer = $this->getUser();
-        if ($Customer != null && $Customer->isDeviceAuthed()) {
-            return true;
-        }
-
-        return false;
-    }
 }
