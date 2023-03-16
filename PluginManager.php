@@ -29,9 +29,8 @@ class PluginManager extends AbstractPluginManager
 {
     // 設定対象ページ情報
     private $pages = [
-        ['plg_customer_2fa_device_auth_send_onetime', 'デバイス認証送信先入力', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/send_onetime'],
-        ['plg_customer_2fa_device_auth_input_onetime', 'デバイス認証トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/input_onetime'],
-        ['plg_customer_2fa_device_auth_complete', 'デバイス認証完了', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/complete'],
+        ['plg_customer_2fa_device_auth_send_onetime', 'デバイス認証送信先入力', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/send'],
+        ['plg_customer_2fa_device_auth_input_onetime', 'デバイス認証トークン入力', 'TwoFactorAuthCustomer42/Resource/template/default/device_auth/input'],
         ['plg_customer_2fa_auth_type_select', '多要素認証方式選択', 'TwoFactorAuthCustomer42/Resource/template/default/tfa/select_type'],
     ];
 
