@@ -129,6 +129,7 @@ class CustomerTwoFactorAuthService
         EntityManagerInterface $entityManager,
         EccubeConfig $eccubeConfig,
         BaseInfoRepository $baseInfoRepository,
+        RequestStack $requestStack,
         TwoFactorAuthConfigRepository $twoFactorAuthConfigRepository,
         TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository,
         PasswordHasherFactoryInterface $hashFactory
@@ -137,7 +138,7 @@ class CustomerTwoFactorAuthService
         $this->eccubeConfig = $eccubeConfig;
 
         $this->baseInfo = $baseInfoRepository->find(1);
-
+        $this->request = $requestStack->getCurrentRequest();
         $this->cookieName = $this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name');
         $this->routeCookieName = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name');
 
