@@ -66,7 +66,7 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * (デバイス認証時)デバイス認証ワンタイムトークン入力画面.
      *
-     * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", methods={"GET", "POST"})
+     * @Route("/two_factor_auth/device_auth/input_onetime/{secret_key}", name="plg_customer_2fa_device_auth_input_onetime", requirements={"secret_key" = "^[a-zA-Z0-9]+$"}, methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/input.twig")
      *
      * @param Request $request
@@ -84,6 +84,9 @@ class CustomerPersonalValidationController extends AbstractController
         $error = null;
         /** @var Customer $Customer */
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
+        if ($Customer === null) {
+            throw $this->createNotFoundException();
+        }
         $builder = $this->formFactory->createBuilder(TwoFactorAuthSmsTypeCustomer::class);
         // 入力フォーム生成
         $form = $builder->getForm();
@@ -98,8 +101,9 @@ class CustomerPersonalValidationController extends AbstractController
                     // ワンタイムトークン一致
                     // 送信電話番号をセッションより取得
                     $phoneNumber = $this->session->get(CustomerTwoFactorAuthService::SESSION_AUTHED_PHONE_NUMBER);
-                    // 他のデバイスで既に認証済みの電話番号かチェック
-                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
+                    // 認証済みの電話番号でないかチェック
+                    if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
+                        // 未認証であれば登録
                         $Customer->setDeviceAuthed(true);
                         $Customer->setDeviceAuthedPhoneNumber($phoneNumber);
                         $Customer->setDeviceAuthOneTimeToken(null);
@@ -114,6 +118,7 @@ class CustomerPersonalValidationController extends AbstractController
                             ['secret_key' => $secret_key]
                         );
                     } else {
+                        // 認証済の場合はスキップ
                         log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                         $error = trans('front.2fa.onetime.invalid_message__reinput');
                     }
@@ -134,7 +139,7 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * (デバイス認証時)デバイス認証 送信先入力画面.
      *
-     * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", methods={"GET", "POST"})
+     * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", requirements={"secret_key" = "^[a-zA-Z0-9]+$"}, methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/device_auth/send.twig")
      *
      * @param Request $request
@@ -152,17 +157,19 @@ class CustomerPersonalValidationController extends AbstractController
         $error = null;
         /** @var Customer $Customer */
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
+        if ($Customer === null) {
+            throw $this->createNotFoundException();
+        }
         $builder = $this->formFactory->createBuilder(TwoFactorAuthPhoneNumberTypeCustomer::class);
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
-                // 他のデバイスで既に認証済みの電話番号かチェック
+                // 認証済みの電話番号でないかチェック
                 $phoneNumber = $form->get('phone_number')->getData();
-                if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) == null) {
-                    // 認証されていない電話番号の場合
-                    // 入力電話番号へワンタイムコードを送信
+                if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
+                    // 未認証の場合、入力電話番号へワンタイムコードを送信
                     $this->sendDeviceToken($Customer, $phoneNumber);
                     // 送信電話番号をセッションへ一時格納
                     $this->session->set(
@@ -170,6 +177,7 @@ class CustomerPersonalValidationController extends AbstractController
                         $phoneNumber
                     );
                 } else {
+                    // 認証済の場合はスキップ
                     log_warning('[デバイス認証(SMS)] 既に認証済みの電話番号指定');
                 }
 
@@ -242,21 +250,5 @@ class CustomerPersonalValidationController extends AbstractController
         }
 
         return true;
-    }
-
-    /**
-     * デバイス認証済みか否か.
-     *
-     * @return boolean
-     */
-    protected function isDeviceAuthed(): bool
-    {
-        /** @var Customer $Customer */
-        $Customer = $this->getUser();
-        if ($Customer != null && $Customer->isDeviceAuthed()) {
-            return true;
-        }
-
-        return false;
     }
 }
