@@ -153,6 +153,55 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     }
 
     /**
+     * ログイン完了 イベントハンドラ.
+     *
+     * @param LoginSuccessEvent $event
+     *
+     * @return RedirectResponse|void
+     */
+    public function onLoginSuccess(LoginSuccessEvent $event)
+    {
+        if ($this->requestContext->isAdmin()) {
+            // バックエンドURLの場合処理なし
+            return;
+        }
+
+        if (!$this->baseInfo->isTwoFactorAuthUse()) {
+            // 2段階認証使用しない場合は処理なし
+            return;
+        }
+
+        if ($this->requestContext->getCurrentUser() === null) {
+            // ログインしていない場合は処理なし
+            return;
+        }
+
+        if ($this->requestContext->getCurrentUser()->getTwoFactorAuthType() !== null &&
+            $this->requestContext->getCurrentUser()->getTwoFactorAuthType()->isDisabled()) {
+            // ユーザーが選択した２段階認証方式は無効になっている場合、ログアウトさせる。
+            return new RedirectResponse($this->router->generate('logout'), 302);
+        }
+
+        $this->multiFactorAuth(
+            $event,
+            $this->requestContext->getCurrentUser(),
+            $event->getRequest()->attributes->get('_route'));
+    }
+
+    /**
+     * ログアウトする前に全ての2FA認証クッキーを消す
+     *
+     * @param LogoutEvent $logoutEvent ログアウトイベント
+     *
+     * @return void
+     */
+    public function logoutEvent(LogoutEvent $logoutEvent)
+    {
+        $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
+    }
+
+
+    /**
      * ルート・URIが個別認証対象かチェック.
      *
      * @param string $route
@@ -307,51 +356,4 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         }
     }
 
-    /**
-     * ログイン完了 イベントハンドラ.
-     *
-     * @param LoginSuccessEvent $event
-     *
-     * @return RedirectResponse|void
-     */
-    public function onLoginSuccess(LoginSuccessEvent $event)
-    {
-        if ($this->requestContext->isAdmin()) {
-            // バックエンドURLの場合処理なし
-            return;
-        }
-
-        if (!$this->baseInfo->isTwoFactorAuthUse()) {
-            // 2段階認証使用しない場合は処理なし
-            return;
-        }
-
-        if ($this->requestContext->getCurrentUser() === null) {
-            // ログインしていない場合は処理なし
-            return;
-        }
-
-        if ($this->requestContext->getCurrentUser()->getTwoFactorAuthType() !== null &&
-            $this->requestContext->getCurrentUser()->getTwoFactorAuthType()->isDisabled()) {
-            // ユーザーが選択した２段階認証方式は無効になっている場合、ログアウトさせる。
-            return new RedirectResponse($this->router->generate('logout'), 302);
-        }
-
-        $this->multiFactorAuth(
-            $event,
-            $this->requestContext->getCurrentUser(),
-            $event->getRequest()->attributes->get('_route'));
-    }
-
-    /**
-     * ログアウトする前に全ての2FA認証クッキーを消す
-     *
-     * @param LogoutEvent $logoutEvent ログアウトイベント
-     *
-     * @return void
-     */
-    public function logoutEvent(LogoutEvent $logoutEvent)
-    {
-        $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
-    }
 }

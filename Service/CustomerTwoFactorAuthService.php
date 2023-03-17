@@ -383,18 +383,6 @@ class CustomerTwoFactorAuthService
         }
     }
 
-    /***
-     * @param string $haystack
-     * @param string $needle
-     * @return bool
-     *
-     * @deprecated ECCUBEの最低PHPバージョンは8.0になったら, この関数を消してphp8.0からのstr_containsを利用する
-     */
-    private function str_contains(string $haystack, string $needle)
-    {
-        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
-    }
-
     public function generateOneTimeToken(): string
     {
         $token = '';
@@ -420,5 +408,17 @@ class CustomerTwoFactorAuthService
     {
         // ハッシュジェネレーターをエンティティに持って来る
         return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
+    }
+
+    /***
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     *
+     * @deprecated ECCUBEの最低PHPバージョンは8.0になったら, この関数を消してphp8.0からのstr_containsを利用する
+     */
+    private function str_contains(string $haystack, string $needle)
+    {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
     }
 }

@@ -139,28 +139,6 @@ class CustomerPersonalValidationController extends AbstractController
     }
 
     /**
-     * デバイス認証用のワンタイムトークンチェック.
-     *
-     * @param $Customer
-     * @param $token
-     *
-     * @return boolean
-     */
-    private function checkDeviceToken($Customer, $token): bool
-    {
-        $now = new \DateTime();
-
-        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
-        if (
-            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
-            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * (デバイス認証時)デバイス認証 送信先入力画面.
      *
      * @Route("/two_factor_auth/device_auth/send_onetime/{secret_key}", name="plg_customer_2fa_device_auth_send_onetime", requirements={"secret_key" = "^[a-zA-Z0-9]+$"}, methods={"GET", "POST"})
@@ -225,6 +203,28 @@ class CustomerPersonalValidationController extends AbstractController
             'Customer' => $Customer,
             'error' => $error,
         ];
+    }
+
+    /**
+     * デバイス認証用のワンタイムトークンチェック.
+     *
+     * @param $Customer
+     * @param $token
+     *
+     * @return boolean
+     */
+    private function checkDeviceToken($Customer, $token): bool
+    {
+        $now = new \DateTime();
+
+        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
+        if (
+            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
+            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
