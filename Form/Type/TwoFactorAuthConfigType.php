@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * This file is part of EC-CUBE
+ *
+ * Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+ *
+ * http://www.ec-cube.co.jp/
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Plugin\TwoFactorAuthCustomer42\Form\Type;
 
 use Eccube\Common\EccubeConfig;
@@ -30,7 +41,6 @@ class TwoFactorAuthConfigType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-
         $builder
             ->add('api_key', TextType::class, [
                 'required' => true,
@@ -40,7 +50,7 @@ class TwoFactorAuthConfigType extends AbstractType
                     new Assert\Regex(
                         [
                             'pattern' => '/^[a-zA-Z0-9]+$/i',
-                            'message' => 'form_error.graph_only'
+                            'message' => 'form_error.graph_only',
                         ]
                     ),
                 ],
@@ -53,7 +63,7 @@ class TwoFactorAuthConfigType extends AbstractType
                     new Assert\Regex(
                         [
                             'pattern' => '/^[a-zA-Z0-9]+$/i',
-                            'message' => 'form_error.graph_only'
+                            'message' => 'form_error.graph_only',
                         ]
                     ),
                 ],
@@ -66,7 +76,7 @@ class TwoFactorAuthConfigType extends AbstractType
                     new Assert\Regex(
                         [
                             'pattern' => '/^[0-9]+$/i',
-                            'message' => 'form_error.numeric_only'
+                            'message' => 'form_error.numeric_only',
                         ]
                     ),
                 ],
@@ -83,6 +93,7 @@ class TwoFactorAuthConfigType extends AbstractType
 
     /**
      * {@inheritDoc}
+     *
      * @see \Symfony\Component\Form\AbstractType::configureOptions()
      */
     public function configureOptions(OptionsResolver $resolver)
@@ -91,5 +102,4 @@ class TwoFactorAuthConfigType extends AbstractType
             'data_class' => TwoFactorAuthConfig::class,
         ]);
     }
-
 }
