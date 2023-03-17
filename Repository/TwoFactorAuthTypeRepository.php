@@ -36,7 +36,7 @@ class TwoFactorAuthTypeRepository extends AbstractRepository
     }
 
     /**
-     * @return $result
+     * @return object|TwoFactorAuthType|null $result
      */
     public function findOne()
     {

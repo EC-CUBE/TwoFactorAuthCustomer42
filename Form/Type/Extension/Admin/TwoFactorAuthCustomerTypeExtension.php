@@ -43,10 +43,18 @@ class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public static function getExtendedTypes(): iterable
+    {
+        yield CustomerType::class;
+    }
+
+    /**
      * buildForm.
      *
      * @param FormBuilderInterface $builder
-     * @param array                $options
+     * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
@@ -63,22 +71,13 @@ class TwoFactorAuthCustomerTypeExtension extends AbstractTypeExtension
                 'mapped' => true,
                 'placeholder' => 'admin.customer.2fa.type_option.default',
             ])
-            ->add('device_authed', ToggleSwitchType::class, [
-                'required' => false,
-                'mapped' => true,
-            ])
-            ->add('device_authed_phone_number', PhoneNumberType::class, [
-                'required' => false,
-            ])
-            ;
+                ->add('device_authed', ToggleSwitchType::class, [
+                    'required' => false,
+                    'mapped' => true,
+                ])
+                ->add('device_authed_phone_number', PhoneNumberType::class, [
+                    'required' => false,
+                ]);
         });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getExtendedTypes(): iterable
-    {
-        yield CustomerType::class;
     }
 }

@@ -27,8 +27,7 @@ class TwoFactorAuthPhoneNumberTypeCustomer extends AbstractType
         $builder
             ->add('phone_number', PhoneNumberType::class, [
                 'required' => true,
-            ])
-        ;
+            ]);
     }
 
     /**

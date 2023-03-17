@@ -13,6 +13,7 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Controller;
 
+use DateTime;
 use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Repository\CustomerRepository;
@@ -49,15 +50,16 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * TwoFactorAuthCustomerController constructor.
      *
-     * @param CustomerRepository $customerRepository,
-     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-     * @param Environment       $twig
+     * @param CustomerRepository $customerRepository ,
+     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService ,
+     * @param Environment $twig
      */
     public function __construct(
-        CustomerRepository $customerRepository,
+        CustomerRepository           $customerRepository,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        Environment $twig
-    ) {
+        Environment                  $twig
+    )
+    {
         $this->customerRepository = $customerRepository;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;
@@ -134,6 +136,28 @@ class CustomerPersonalValidationController extends AbstractController
             'Customer' => $Customer,
             'error' => $error,
         ];
+    }
+
+    /**
+     * デバイス認証用のワンタイムトークンチェック.
+     *
+     * @param $Customer
+     * @param $token
+     *
+     * @return boolean
+     */
+    private function checkDeviceToken($Customer, $token): bool
+    {
+        $now = new DateTime();
+
+        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
+        if (
+            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
+            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -227,28 +251,6 @@ class CustomerPersonalValidationController extends AbstractController
         ]);
 
         // SMS送信
-        return $this->customerTwoFactorAuthService->sendBySms($Customer, $phoneNumber, $body);
-    }
-
-    /**
-     * デバイス認証用のワンタイムトークンチェック.
-     *
-     * @param $Customer
-     * @param $token
-     *
-     * @return boolean
-     */
-    private function checkDeviceToken($Customer, $token): bool
-    {
-        $now = new \DateTime();
-
-        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
-        if (
-            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
-            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
-            return false;
-        }
-
-        return true;
+        return $this->customerTwoFactorAuthService->sendBySms($phoneNumber, $body);
     }
 }

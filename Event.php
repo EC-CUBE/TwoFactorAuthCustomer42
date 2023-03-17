@@ -67,12 +67,13 @@ class Event implements EventSubscriberInterface
      * @param Environment $twig
      */
     public function __construct(
-        ContainerInterface $container,
-        BaseInfoRepository $baseInfoRepository,
-        EntityManagerInterface $entityManager,
+        ContainerInterface           $container,
+        BaseInfoRepository           $baseInfoRepository,
+        EntityManagerInterface       $entityManager,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        Environment $twig
-    ) {
+        Environment                  $twig
+    )
+    {
         $this->container = $container;
         $this->BaseInfo = $baseInfoRepository->get();
         $this->entityManager = $entityManager;

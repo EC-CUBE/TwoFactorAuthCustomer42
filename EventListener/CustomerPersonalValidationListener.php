@@ -13,8 +13,8 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\EventListener;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
+use Eccube\Entity\BaseInfo;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Repository\CustomerRepository;
 use Eccube\Request\Context;
@@ -35,64 +35,48 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
      * アクティベーション
      */
     public const ACTIVATE_ROUTE = 'entry_activate';
-
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
-
     /**
      * @var EccubeConfig
      */
     protected $eccubeConfig;
-
     /**
      * @var Context
      */
     protected $requestContext;
-
     /**
      * @var UrlGeneratorInterface
      */
     protected $router;
-
     /**
      * @var CustomerTwoFactorAuthService
      */
     protected $customerTwoFactorAuthService;
-
     /**
      * @var BaseInfoRepository
      */
     protected BaseInfoRepository $baseInfoRepository;
-
     /**
      * @var CustomerRepository
      */
     protected CustomerRepository $customerRepository;
-
     /**
      * @var TwoFactorAuthTypeRepository
      */
     protected TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository;
-
     /**
-     * @var \Eccube\Entity\BaseInfo|object|null
+     * @var BaseInfo|object|null
      */
     protected $baseInfo;
-
     /**
      * @var Session
      */
     protected $session;
-
     /**
      * 個別認証ルート.
      */
     protected $include_routes;
 
     /**
-     * @param EntityManagerInterface $entityManager
      * @param EccubeConfig $eccubeConfig
      * @param Context $requestContext
      * @param UrlGeneratorInterface $router
@@ -103,7 +87,6 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
      * @param SessionInterface $session
      */
     public function __construct(
-        EntityManagerInterface $entityManager,
         EccubeConfig $eccubeConfig,
         Context $requestContext,
         UrlGeneratorInterface $router,
@@ -113,7 +96,6 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
         TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
         SessionInterface $session
     ) {
-        $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
         $this->requestContext = $requestContext;
         $this->router = $router;
@@ -177,6 +159,20 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
     }
 
     /**
+     * アクティベーションルートかチェック.
+     *
+     * @param string $route
+     * @param string $uri
+     *
+     * @return bool
+     */
+    private function isActivationRoute(string $route): bool
+    {
+        // ルートで認証
+        return $route === self::ACTIVATE_ROUTE;
+    }
+
+    /**
      * デバイス認証.
      *
      * @param mixed $event
@@ -210,21 +206,5 @@ class CustomerPersonalValidationListener implements EventSubscriberInterface
                 return new RedirectResponse($url, $status = 302);
             });
         }
-
-        return;
-    }
-
-    /**
-     * アクティベーションルートかチェック.
-     *
-     * @param string $route
-     * @param string $uri
-     *
-     * @return bool
-     */
-    private function isActivationRoute(string $route): bool
-    {
-        // ルートで認証
-        return $route === self::ACTIVATE_ROUTE;
     }
 }

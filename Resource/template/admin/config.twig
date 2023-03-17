@@ -29,21 +29,27 @@
                         <div class="collapse show ec-cardCollapse" id="basicConfig">
                             <div class="card-body">
                                 <div class="form-group row">
-                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.sid'|trans }}<span class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
+                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.sid'|trans }}<span
+                                            class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
                                     <div class="col mb-2">
                                         {{ form_widget(form.api_key) }}
                                         {{ form_errors(form.api_key) }}
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.api_token'|trans }}<span class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
+                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.api_token'|trans }}
+                                        <span
+                                            class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
                                     <div class="col mb-2">
                                         {{ form_widget(form.api_secret) }}
                                         {{ form_errors(form.api_secret) }}
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.sms.from_phone_number'|trans }}<span class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
+                                    <label
+                                        class="col-2 control-label">{{ 'admin.setting.2fa.sms.from_phone_number'|trans }}
+                                        <span
+                                            class="badge bg-primary ms-1">{{ 'admin.common.required'|trans }}</span></label>
                                     <div class="col mb-2">
                                         {{ form_widget(form.from_phone_number) }}
                                         {{ form_errors(form.from_phone_number) }}
@@ -67,7 +73,8 @@
                         <div class="collapse show ec-cardCollapse" id="basicConfig">
                             <div class="card-body">
                                 <div class="form-group row">
-                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.route.include'|trans }}<span class="badge bg-primary ms-1"></span></label>
+                                    <label class="col-2 control-label">{{ 'admin.setting.2fa.route.include'|trans }}
+                                        <span class="badge bg-primary ms-1"></span></label>
                                     <div class="col mb-2">
                                         {{ form_widget(form.include_routes, { 'attr': { 'rows': 8 }}) }}
                                         {{ form_errors(form.include_routes) }}
@@ -85,7 +92,8 @@
                 <div class="row justify-content-between align-items-center">
                     <div class="col-6">
                         <div class="c-conversionArea__leftBlockItem">
-                            <a class="c-baseLink" href="{{ url('admin_store_plugin') }}"><i class="fa fa-backward" aria-hidden="true"></i>
+                            <a class="c-baseLink" href="{{ url('admin_store_plugin') }}"><i class="fa fa-backward"
+                                                                                            aria-hidden="true"></i>
                                 <span>プラグイン一覧</span></a>
                         </div>
                     </div>

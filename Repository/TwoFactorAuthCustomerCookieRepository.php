@@ -72,7 +72,32 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
     }
 
     /**
-     * @return $result
+     * 過去のクッキーデータの取得
+     *
+     * @param Customer $customer
+     * @param string $cookieName
+     *
+     * @return float|int|mixed|string
+     */
+    public function findOldCookies(Customer $customer, string $cookieName)
+    {
+        $expireDate = Carbon::now()->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+        return $this->createQueryBuilder('tfcc')
+            ->where('tfcc.Customer = :customer_id')
+            ->andWhere('tfcc.cookie_name = :cookie_name')
+            ->andWhere('tfcc.cookie_expire_date < :expire_date')
+            ->setParameters([
+                'customer_id' => $customer->getId(),
+                'cookie_name' => $cookieName,
+                'expire_date' => $expireDate,
+            ])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return TwoFactorAuthCustomerCookie|null $result
      */
     public function findOne()
     {
@@ -105,31 +130,6 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
             ->where('tfcc.Customer = :customer_id')
             ->andWhere('tfcc.cookie_name = :cookie_name')
             ->andWhere('tfcc.cookie_expire_date > :expire_date')
-            ->setParameters([
-                'customer_id' => $customer->getId(),
-                'cookie_name' => $cookieName,
-                'expire_date' => $expireDate,
-            ])
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * 過去のクッキーデータの取得
-     *
-     * @param Customer $customer
-     * @param string $cookieName
-     *
-     * @return float|int|mixed|string
-     */
-    public function findOldCookies(Customer $customer, string $cookieName)
-    {
-        $expireDate = Carbon::now()->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-        return $this->createQueryBuilder('tfcc')
-            ->where('tfcc.Customer = :customer_id')
-            ->andWhere('tfcc.cookie_name = :cookie_name')
-            ->andWhere('tfcc.cookie_expire_date < :expire_date')
             ->setParameters([
                 'customer_id' => $customer->getId(),
                 'cookie_name' => $cookieName,

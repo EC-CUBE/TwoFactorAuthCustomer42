@@ -94,7 +94,7 @@ class TwoFactorAuthConfigType extends AbstractType
     /**
      * {@inheritDoc}
      *
-     * @see \Symfony\Component\Form\AbstractType::configureOptions()
+     * @see AbstractType::configureOptions
      */
     public function configureOptions(OptionsResolver $resolver)
     {
