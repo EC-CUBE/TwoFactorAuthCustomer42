@@ -168,6 +168,7 @@ class TwoFactorAuthConfig extends AbstractEntity
 
         return $this;
     }
+
     /**
      * Get include_routes.
      *

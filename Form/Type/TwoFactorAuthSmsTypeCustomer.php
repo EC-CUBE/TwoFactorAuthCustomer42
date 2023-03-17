@@ -42,7 +42,7 @@ class TwoFactorAuthSmsTypeCustomer extends AbstractType
                     'style' => 'width: 100px;',
                 ],
             ])
-            ;
+        ;
     }
 
     /**

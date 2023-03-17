@@ -119,6 +119,7 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
      *
      * @param Customer $customer
      * @param string $cookieName
+     *
      * @return float|int|mixed|string
      */
     public function findOldCookies(Customer $customer, string $cookieName)

@@ -55,11 +55,11 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
             $form = $event->getForm();
             $form->add('two_factor_auth_use', ToggleSwitchType::class, [
                 'required' => false,
-                'mapped' => true
+                'mapped' => true,
             ])
             ->add('option_activate_device', ToggleSwitchType::class, [
                 'required' => false,
-                'mapped' => true
+                'mapped' => true,
             ])
             ;
         });

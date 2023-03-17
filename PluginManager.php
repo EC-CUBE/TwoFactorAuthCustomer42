@@ -18,9 +18,9 @@ use Eccube\Entity\Layout;
 use Eccube\Entity\Page;
 use Eccube\Entity\PageLayout;
 use Eccube\Plugin\AbstractPluginManager;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
 
 /**
  * Class PluginManager.
@@ -183,5 +183,4 @@ class PluginManager extends AbstractPluginManager
         $em->persist($TwoFactorAuthConfig);
         $em->flush();
     }
-
 }
