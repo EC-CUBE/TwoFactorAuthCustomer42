@@ -32,18 +32,6 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 class TwoFactorAuthCustomerCookie extends AbstractEntity
 {
     /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="created_at", type="datetime", nullable=false)
-     */
-    protected \DateTime $createdAt;
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="updated_at", type="datetime", nullable=false)
-     */
-    protected \DateTime $updatedAt;
-    /**
      * @var int
      *
      * @ORM\Column(name="id", type="integer", options={"unsigned":true})
@@ -78,6 +66,18 @@ class TwoFactorAuthCustomerCookie extends AbstractEntity
      * @ORM\Column(name="cookie_expire_date", type="datetime", nullable=true)
      */
     private ?\DateTime $cookie_expire_date;
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created_at", type="datetime", nullable=false)
+     */
+    private \DateTime $createdAt;
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="updated_at", type="datetime", nullable=false)
+     */
+    private \DateTime $updatedAt;
 
     /**
      * @ORM\PrePersist
