@@ -115,17 +115,6 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
     {
         $expireDate = Carbon::now()->setTimezone('UTC')->format('Y-m-d H:i:s');
 
-        $something = $this->createQueryBuilder('tfcc')
-            ->where('tfcc.Customer = :customer_id')
-            ->andWhere('tfcc.cookie_name = :cookie_name')
-            ->andWhere('tfcc.cookie_expire_date > :expire_date')
-            ->setParameters([
-                'customer_id' => $customer->getId(),
-                'cookie_name' => $cookieName,
-                'expire_date' => $expireDate,
-            ])
-            ->getQuery()->getSQL();
-
         return $this->createQueryBuilder('tfcc')
             ->where('tfcc.Customer = :customer_id')
             ->andWhere('tfcc.cookie_name = :cookie_name')

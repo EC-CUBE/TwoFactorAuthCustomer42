@@ -53,7 +53,7 @@ trait CustomerTrait
     /**
      * 2段階認証機能の設定
      *
-     * @var int
+     * @var int|null
      *
      * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
@@ -98,7 +98,7 @@ trait CustomerTrait
     }
 
     /**
-     * @param string $device_auth_one_time_token
+     * @param string|null $device_auth_one_time_token
      */
     public function setDeviceAuthOneTimeToken(?string $device_auth_one_time_token): void
     {
@@ -138,7 +138,7 @@ trait CustomerTrait
     }
 
     /**
-     * @param bool $two_factor_auth
+     * @param bool $device_authed
      */
     public function setDeviceAuthed(bool $device_authed): void
     {

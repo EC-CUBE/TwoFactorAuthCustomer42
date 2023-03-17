@@ -13,13 +13,11 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\EventListener;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Common\EccubeConfig;
 use Eccube\Entity\BaseInfo;
 use Eccube\Entity\Customer;
 use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Repository\BaseInfoRepository;
-use Eccube\Repository\CustomerRepository;
 use Eccube\Request\Context;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
@@ -78,6 +76,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param UrlGeneratorInterface $router
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
+     * @param BaseInfoRepository $baseInfoRepository
      * @param SessionInterface $session
      */
     public function __construct(
@@ -312,6 +311,8 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * ログイン完了 イベントハンドラ.
      *
      * @param LoginSuccessEvent $event
+     *
+     * @return RedirectResponse|void
      */
     public function onLoginSuccess(LoginSuccessEvent $event)
     {

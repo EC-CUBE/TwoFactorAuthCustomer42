@@ -35,8 +35,7 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
      */
     public function __construct(
         EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
     }
 

@@ -160,7 +160,7 @@ class TwoFactorAuthConfig extends AbstractEntity
         $routes = $this->getRoutes($this->getIncludeRoutes());
 
         if (!in_array($route, $routes)) {
-            $this->setIncludeRoutes($this->include_routes . PHP_EOL . $route);
+            $this->setIncludeRoutes($this->include_routes.PHP_EOL.$route);
         }
 
         return $this;
