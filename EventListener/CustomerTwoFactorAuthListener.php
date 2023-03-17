@@ -37,10 +37,6 @@ use Symfony\Contracts\EventDispatcher\Event;
 class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 {
     /**
-     * アクティベーション
-     */
-    public const ACTIVATE_ROUTE = 'entry_activate';
-    /**
      * @var EccubeConfig
      */
     protected $eccubeConfig;
@@ -56,14 +52,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @var CustomerTwoFactorAuthService
      */
     protected $customerTwoFactorAuthService;
-    /**
-     * @var BaseInfoRepository
-     */
-    protected BaseInfoRepository $baseInfoRepository;
-    /**
-     * @var CustomerRepository
-     */
-    protected CustomerRepository $customerRepository;
     /**
      * @var TwoFactorAuthTypeRepository
      */
@@ -84,42 +72,26 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * 重要操作ルート.
      */
     protected $include_routes;
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
 
     /**
-     * @param EntityManagerInterface $entityManager
-     * @param EccubeConfig $eccubeConfig
      * @param Context $requestContext
      * @param UrlGeneratorInterface $router
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService
-     * @param BaseInfoRepository $baseInfoRepository
-     * @param CustomerRepository $customerRepository
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
      * @param SessionInterface $session
      */
     public function __construct(
-        EntityManagerInterface       $entityManager,
-        EccubeConfig                 $eccubeConfig,
-        Context                      $requestContext,
-        UrlGeneratorInterface        $router,
+        Context $requestContext,
+        UrlGeneratorInterface $router,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        BaseInfoRepository           $baseInfoRepository,
-        CustomerRepository           $customerRepository,
-        TwoFactorAuthTypeRepository  $twoFactorAuthTypeRepository,
-        SessionInterface             $session
-    )
-    {
-        $this->entityManager = $entityManager;
-        $this->eccubeConfig = $eccubeConfig;
+        TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
+        BaseInfoRepository $baseInfoRepository,
+        SessionInterface $session
+    ) {
         $this->requestContext = $requestContext;
         $this->router = $router;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
-        $this->baseInfoRepository = $baseInfoRepository;
-        $this->baseInfo = $this->baseInfoRepository->find(1);
-        $this->customerRepository = $customerRepository;
+        $this->baseInfo = $baseInfoRepository->find(1);
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->session = $session;
 
@@ -179,8 +151,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
 
             $this->multiFactorAuth($event, $Customer, $route);
         }
-
-        return;
     }
 
     /**
@@ -269,8 +239,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
                 $this->auth($event, $Customer, $route);
             }
         }
-
-        return;
     }
 
     /**
@@ -294,8 +262,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         } else {
             $event->setResponse(new RedirectResponse($url, 302));
         }
-
-        return;
     }
 
     /**
@@ -340,8 +306,6 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         } else {
             $event->setResponse(new RedirectResponse($url, 302));
         }
-
-        return;
     }
 
     /**

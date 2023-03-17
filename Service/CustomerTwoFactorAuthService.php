@@ -126,14 +126,13 @@ class CustomerTwoFactorAuthService
      * @param PasswordHasherFactoryInterface $hashFactory
      */
     public function __construct(
-        EntityManagerInterface                $entityManager,
-        EccubeConfig                          $eccubeConfig,
-        BaseInfoRepository                    $baseInfoRepository,
-        TwoFactorAuthConfigRepository         $twoFactorAuthConfigRepository,
+        EntityManagerInterface $entityManager,
+        EccubeConfig $eccubeConfig,
+        BaseInfoRepository $baseInfoRepository,
+        TwoFactorAuthConfigRepository $twoFactorAuthConfigRepository,
         TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository,
-        PasswordHasherFactoryInterface        $hashFactory
-    )
-    {
+        PasswordHasherFactoryInterface $hashFactory
+    ) {
         $this->entityManager = $entityManager;
         $this->eccubeConfig = $eccubeConfig;
 
@@ -142,8 +141,8 @@ class CustomerTwoFactorAuthService
         $this->cookieName = $this->eccubeConfig->get('plugin_eccube_2fa_customer_cookie_name');
         $this->routeCookieName = $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_cookie_name');
 
-        $this->expire = (int)$this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
-        $this->route_expire = (int)$this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
+        $this->expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
+        $this->route_expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
         $this->twoFactorCustomerCookieRepository = $twoFactorCustomerCookieRepository;
@@ -184,7 +183,7 @@ class CustomerTwoFactorAuthService
         if ($route != null) {
             $includeRouts = $this->getIncludeRoutes();
             if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
-                $cookieName = $this->routeCookieName . '_' . $route;
+                $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
             }
         }
@@ -227,7 +226,7 @@ class CustomerTwoFactorAuthService
             $includeRouts = $this->getIncludeRoutes();
             if (in_array($route, $includeRouts) && $this->isAuthed($Customer, 'mypage')) {
                 // 重要操作ルーティングの場合、
-                $cookieName = $this->routeCookieName . '_' . $route;
+                $cookieName = $this->routeCookieName.'_'.$route;
                 $expire = $this->route_expire;
             } else {
                 // デフォルトルーティングの場合、
@@ -269,7 +268,7 @@ class CustomerTwoFactorAuthService
                     && $config->key === $activeCookie->getCookieValue()
                     && (
                         $this->expire == 0
-                        || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-' . $expire))))
+                        || (property_exists($config, 'date') && ($config->date && $config->date > date('U', strtotime('-'.$expire))))
                     )
                 ) {
                     return true;
@@ -354,7 +353,7 @@ class CustomerTwoFactorAuthService
             $this->twoFactorAuthConfig->getApiSecret()
         ))
             ->messages
-            ->create('+81' . $phoneNumber,
+            ->create('+81'.$phoneNumber,
                 [
                     'from' => $this->twoFactorAuthConfig->getFromPhonenumber(),
                     'body' => $body,
@@ -399,7 +398,7 @@ class CustomerTwoFactorAuthService
     {
         $token = '';
         for ($i = 0; $i < 6; $i++) {
-            $token .= (string)random_int(0, 9);
+            $token .= (string) random_int(0, 9);
         }
 
         return $token;

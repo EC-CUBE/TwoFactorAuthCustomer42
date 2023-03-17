@@ -13,7 +13,6 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Controller;
 
-use DateTime;
 use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Repository\CustomerRepository;
@@ -28,6 +27,8 @@ use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twilio\Exceptions\ConfigurationException;
+use Twilio\Exceptions\TwilioException;
 use Twilio\Rest\Api\V2010\Account\MessageInstance;
 
 class CustomerPersonalValidationController extends AbstractController
@@ -55,11 +56,10 @@ class CustomerPersonalValidationController extends AbstractController
      * @param Environment $twig
      */
     public function __construct(
-        CustomerRepository           $customerRepository,
+        CustomerRepository $customerRepository,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        Environment                  $twig
-    )
-    {
+        Environment $twig
+    ) {
         $this->customerRepository = $customerRepository;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;
@@ -148,7 +148,7 @@ class CustomerPersonalValidationController extends AbstractController
      */
     private function checkDeviceToken($Customer, $token): bool
     {
-        $now = new DateTime();
+        $now = new \DateTime();
 
         // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
         if (
@@ -170,6 +170,11 @@ class CustomerPersonalValidationController extends AbstractController
      * @param $secret_key
      *
      * @return array|RedirectResponse
+     * @throws ConfigurationException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws TwilioException
      */
     public function deviceAuthSendOneTime(Request $request, $secret_key)
     {
@@ -233,6 +238,8 @@ class CustomerPersonalValidationController extends AbstractController
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
+     * @throws ConfigurationException
+     * @throws TwilioException
      */
     private function sendDeviceToken(Customer $Customer, string $phoneNumber)
     {

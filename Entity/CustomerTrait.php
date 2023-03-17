@@ -13,7 +13,6 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
-use DateTime;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Annotation\EntityExtension;
@@ -31,7 +30,7 @@ trait CustomerTrait
     private ?string $device_auth_one_time_token = null;
 
     /**
-     * @var DateTime|null
+     * @var \DateTime|null
      *
      * @ORM\Column(name="device_auth_one_time_token_expire", type="datetimetz", nullable=true)
      */
@@ -84,7 +83,7 @@ trait CustomerTrait
      */
     public function createDeviceAuthOneTimeToken(string $hashedOneTimePassword): void
     {
-        $now = new DateTime();
+        $now = new \DateTime();
 
         $this->setDeviceAuthOneTimeToken($hashedOneTimePassword);
         $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
@@ -109,7 +108,7 @@ trait CustomerTrait
     /**
      * Get resetExpire.
      *
-     * @return DateTime|null
+     * @return \DateTime|null
      */
     public function getDeviceAuthOneTimeTokenExpire()
     {
@@ -119,7 +118,7 @@ trait CustomerTrait
     /**
      * Set oneTimeTokenExpire.
      *
-     * @param DateTime|null $resetExpire
+     * @param \DateTime|null $resetExpire
      *
      * @return Customer
      */

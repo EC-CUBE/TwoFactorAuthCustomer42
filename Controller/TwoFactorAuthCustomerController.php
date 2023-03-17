@@ -47,11 +47,10 @@ class TwoFactorAuthCustomerController extends AbstractController
      * @param Environment $twig
      */
     public function __construct(
-        CustomerRepository           $customerRepository,
+        CustomerRepository $customerRepository,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-        Environment                  $twig
-    )
-    {
+        Environment $twig
+    ) {
         $this->customerRepository = $customerRepository;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;
