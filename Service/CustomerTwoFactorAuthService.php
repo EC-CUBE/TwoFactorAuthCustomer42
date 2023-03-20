@@ -345,9 +345,13 @@ class CustomerTwoFactorAuthService
     /**
      * SMSで顧客電話番号へメッセージを送信.
      *
-     * @param \Eccube\Entity\Customer $Customer
+     * @param $phoneNumber
+     * @param $body
+     * @return \Twilio\Rest\Api\V2010\Account\MessageInstance
+     * @throws \Twilio\Exceptions\ConfigurationException
+     * @throws \Twilio\Exceptions\TwilioException
      */
-    public function sendBySms($Customer, $phoneNumber, $body)
+    public function sendBySms($phoneNumber, $body)
     {
         // Twilio
         $twilio = new \Twilio\Rest\Client(
