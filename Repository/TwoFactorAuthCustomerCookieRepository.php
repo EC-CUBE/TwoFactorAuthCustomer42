@@ -127,4 +127,21 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
             ->getQuery()
             ->getResult();
     }
+
+    /***
+     * 会員のクッキーを削除
+     *
+     * @param Customer $customer
+     */
+    public function deleteByCustomer(Customer $customer)
+    {
+        $em = $this->getEntityManager();
+        $em->beginTransaction();
+
+        $em->createQuery("DELETE Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie tfcc WHERE tfcc.Customer = :customer")->execute(['customer' => $customer]);
+        $em->flush();
+
+        $em->commit();
+    }
+
 }

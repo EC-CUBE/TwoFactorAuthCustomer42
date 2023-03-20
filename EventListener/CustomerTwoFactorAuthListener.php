@@ -20,6 +20,7 @@ use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Request\Context;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
+use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthCustomerCookieRepository;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -55,6 +56,10 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      */
     protected TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository;
     /**
+     * @var TwoFactorAuthCustomerCookieRepository
+     */
+    protected TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository;
+    /**
      * @var BaseInfo|object|null
      */
     protected $baseInfo;
@@ -76,6 +81,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param UrlGeneratorInterface $router
      * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
+     * @param TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository
      * @param BaseInfoRepository $baseInfoRepository
      * @param SessionInterface $session
      */
@@ -84,6 +90,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         UrlGeneratorInterface $router,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
+        TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository,
         BaseInfoRepository $baseInfoRepository,
         SessionInterface $session
     ) {
@@ -92,6 +99,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->baseInfo = $baseInfoRepository->find(1);
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
+        $this->twoFactorAuthCustomerCookieRepository = $twoFactorAuthCustomerCookieRepository;
         $this->session = $session;
 
         $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
@@ -198,6 +206,10 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
     public function logoutEvent(LogoutEvent $logoutEvent)
     {
         $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
+        $Customer = $this->requestContext->getCurrentUser();
+        if ($Customer) {
+            $this->twoFactorAuthCustomerCookieRepository->deleteByCustomer($Customer);
+        }
     }
 
 
