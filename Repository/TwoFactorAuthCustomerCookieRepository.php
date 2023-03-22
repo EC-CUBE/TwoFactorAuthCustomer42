@@ -55,6 +55,7 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
         int $CookieValueCharacterLength
     ): TwoFactorAuthCustomerCookie {
         /** @var TwoFactorAuthCustomerCookie[]|null $previousCookies */
+
         $previousCookies = $this->findOldCookies($customer, $cookieName);
         foreach ($previousCookies as $cookie) {
             $this->getEntityManager()->remove($cookie);
