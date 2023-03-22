@@ -342,8 +342,11 @@ class CustomerTwoFactorAuthService
      *
      * TODO: APIエラーハンドルの追加、
      *
+     * @param $phoneNumber
+     * @param $body
      * @throws ConfigurationException
      * @throws TwilioException
+     * @return \Twilio\Rest\Api\V2010\Account\MessageInstance
      */
     public function sendBySms($phoneNumber, $body)
     {
