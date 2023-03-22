@@ -16,6 +16,7 @@ namespace Plugin\TwoFactorAuthCustomer42\Repository;
 use Doctrine\Persistence\ManagerRegistry;
 use Eccube\Repository\AbstractRepository;
 use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthConfig;
+use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie;
 
 /**
  * TwoFactorAuthConfigRepository.
@@ -36,7 +37,7 @@ class TwoFactorAuthConfigRepository extends AbstractRepository
     }
 
     /**
-     * @return $result
+     * @return object|TwoFactorAuthConfig|TwoFactorAuthCustomerCookie|null $result
      */
     public function findOne()
     {

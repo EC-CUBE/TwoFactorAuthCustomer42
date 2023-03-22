@@ -13,6 +13,7 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Entity;
 
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Entity\AbstractEntity;
 use Eccube\Entity\Customer;
@@ -38,7 +39,6 @@ class TwoFactorAuthCustomerCookie extends AbstractEntity
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private int $id;
-
     /**
      * @var Customer
      *
@@ -48,41 +48,36 @@ class TwoFactorAuthCustomerCookie extends AbstractEntity
      * })
      */
     private Customer $Customer;
-
     /**
      * @var string
      *
      * @ORM\Column(name="cookie_name", type="string", nullable=false, length=512)
      */
     private string $cookie_name;
-
     /**
      * @var string
      *
      * @ORM\Column(name="cookie_value", type="string", nullable=false, length=512, unique=true)
      */
     private string $cookie_value;
-
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="cookie_expire_date", type="datetime", nullable=true)
      */
     private ?\DateTime $cookie_expire_date;
-
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="created_at", type="datetime", nullable=false)
      */
-    protected \DateTime $createdAt;
-
+    private \DateTime $createdAt;
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="updated_at", type="datetime", nullable=false)
      */
-    protected \DateTime $updatedAt;
+    private \DateTime $updatedAt;
 
     /**
      * @ORM\PrePersist
@@ -94,6 +89,22 @@ class TwoFactorAuthCustomerCookie extends AbstractEntity
         if (!isset($this->createdAt) || $this->getCreatedAt() === null) {
             $this->setCreatedAt(new \DateTime('now'));
         }
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param \DateTime $createdAt
+     */
+    public function setCreatedAt(\DateTime $createdAt): void
+    {
+        $this->createdAt = $createdAt;
     }
 
     /**
@@ -166,22 +177,6 @@ class TwoFactorAuthCustomerCookie extends AbstractEntity
     public function setCookieExpireDate(\DateTime $cookie_expire_date): void
     {
         $this->cookie_expire_date = $cookie_expire_date;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getCreatedAt(): \DateTime
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * @param \DateTime $createdAt
-     */
-    public function setCreatedAt(\DateTime $createdAt): void
-    {
-        $this->createdAt = $createdAt;
     }
 
     /**

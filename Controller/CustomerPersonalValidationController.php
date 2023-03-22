@@ -27,6 +27,8 @@ use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twilio\Exceptions\ConfigurationException;
+use Twilio\Exceptions\TwilioException;
 use Twilio\Rest\Api\V2010\Account\MessageInstance;
 
 class CustomerPersonalValidationController extends AbstractController
@@ -49,9 +51,9 @@ class CustomerPersonalValidationController extends AbstractController
     /**
      * TwoFactorAuthCustomerController constructor.
      *
-     * @param CustomerRepository $customerRepository,
-     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService,
-     * @param Environment       $twig
+     * @param CustomerRepository $customerRepository ,
+     * @param CustomerTwoFactorAuthService $customerTwoFactorAuthService ,
+     * @param Environment $twig
      */
     public function __construct(
         CustomerRepository $customerRepository,
@@ -146,6 +148,11 @@ class CustomerPersonalValidationController extends AbstractController
      * @param $secret_key
      *
      * @return array|RedirectResponse
+     * @throws ConfigurationException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws TwilioException
      */
     public function deviceAuthSendOneTime(Request $request, $secret_key)
     {
@@ -199,38 +206,6 @@ class CustomerPersonalValidationController extends AbstractController
     }
 
     /**
-     * デバイス認証用のワンタイムトークンを送信.
-     *
-     * @param Customer $Customer
-     * @param string $phoneNumber
-     *
-     * @return MessageInstance
-     *
-     * @throws LoaderError
-     * @throws RuntimeError
-     * @throws SyntaxError
-     */
-    private function sendDeviceToken(Customer $Customer, string $phoneNumber)
-    {
-        // ワンタイムトークン生成・保存
-        $token = $this->customerTwoFactorAuthService->generateOneTimeToken();
-        $Customer->createDeviceAuthOneTimeToken($this->customerTwoFactorAuthService->hashOneTimeToken($token));
-
-        $this->entityManager->persist($Customer);
-        $this->entityManager->flush();
-
-        // ワンタイムトークン送信メッセージをレンダリング
-        $twig = 'TwoFactorAuthCustomer42/Resource/template/default/sms/onetime_message.twig';
-        $body = $this->twig->render($twig, [
-            'Customer' => $Customer,
-            'token' => $token,
-        ]);
-
-        // SMS送信
-        return $this->customerTwoFactorAuthService->sendBySms($Customer, $phoneNumber, $body);
-    }
-
-    /**
      * デバイス認証用のワンタイムトークンチェック.
      *
      * @param $Customer
@@ -250,5 +225,39 @@ class CustomerPersonalValidationController extends AbstractController
         }
 
         return true;
+    }
+
+    /**
+     * デバイス認証用のワンタイムトークンを送信.
+     *
+     * @param Customer $Customer
+     * @param string $phoneNumber
+     *
+     * @return MessageInstance
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws ConfigurationException
+     * @throws TwilioException
+     */
+    private function sendDeviceToken(Customer $Customer, string $phoneNumber)
+    {
+        // ワンタイムトークン生成・保存
+        $token = $this->customerTwoFactorAuthService->generateOneTimeToken();
+        $Customer->createDeviceAuthOneTimeToken($this->customerTwoFactorAuthService->hashOneTimeToken($token));
+
+        $this->entityManager->persist($Customer);
+        $this->entityManager->flush();
+
+        // ワンタイムトークン送信メッセージをレンダリング
+        $twig = 'TwoFactorAuthCustomer42/Resource/template/default/sms/onetime_message.twig';
+        $body = $this->twig->render($twig, [
+            'Customer' => $Customer,
+            'token' => $token,
+        ]);
+
+        // SMS送信
+        return $this->customerTwoFactorAuthService->sendBySms($phoneNumber, $body);
     }
 }

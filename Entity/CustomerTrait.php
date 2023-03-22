@@ -53,7 +53,7 @@ trait CustomerTrait
     /**
      * 2段階認証機能の設定
      *
-     * @var int
+     * @var int|null
      *
      * @ORM\Column(name="two_factor_auth_type", type="integer", nullable=true)
      */
@@ -98,11 +98,21 @@ trait CustomerTrait
     }
 
     /**
-     * @param string $device_auth_one_time_token
+     * @param string|null $device_auth_one_time_token
      */
     public function setDeviceAuthOneTimeToken(?string $device_auth_one_time_token): void
     {
         $this->device_auth_one_time_token = $device_auth_one_time_token;
+    }
+
+    /**
+     * Get resetExpire.
+     *
+     * @return \DateTime|null
+     */
+    public function getDeviceAuthOneTimeTokenExpire()
+    {
+        return $this->device_auth_one_time_token_expire;
     }
 
     /**
@@ -120,16 +130,6 @@ trait CustomerTrait
     }
 
     /**
-     * Get resetExpire.
-     *
-     * @return \DateTime|null
-     */
-    public function getDeviceAuthOneTimeTokenExpire()
-    {
-        return $this->device_auth_one_time_token_expire;
-    }
-
-    /**
      * @return bool
      */
     public function isDeviceAuthed(): bool
@@ -138,7 +138,7 @@ trait CustomerTrait
     }
 
     /**
-     * @param bool $two_factor_auth
+     * @param bool $device_authed
      */
     public function setDeviceAuthed(bool $device_authed): void
     {
@@ -162,6 +162,16 @@ trait CustomerTrait
     }
 
     /**
+     * Get sex.
+     *
+     * @return TwoFactorAuthType|null
+     */
+    public function getTwoFactorAuthType()
+    {
+        return $this->TwoFactorAuthType;
+    }
+
+    /**
      * Set two-factor auth type.
      *
      * @param TwoFactorAuthType|null $twoFactorAuthType
@@ -171,16 +181,6 @@ trait CustomerTrait
         $this->TwoFactorAuthType = $twoFactorAuthType;
 
         return $this;
-    }
-
-    /**
-     * Get sex.
-     *
-     * @return TwoFactorAuthType|null
-     */
-    public function getTwoFactorAuthType()
-    {
-        return $this->TwoFactorAuthType;
     }
 
     /**

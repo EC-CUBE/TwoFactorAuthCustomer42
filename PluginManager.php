@@ -52,33 +52,21 @@ class PluginManager extends AbstractPluginManager
     }
 
     /**
-     * @param array $meta
-     * @param ContainerInterface $container
+     * 設定の登録.
+     *
+     * @param EntityManagerInterface $em
      */
-    public function disable(array $meta, ContainerInterface $container)
+    protected function createConfig(EntityManagerInterface $em)
     {
-        $em = $container->get('doctrine')->getManager();
+        $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
+        if ($TwoFactorAuthConfig) {
+            return;
+        }
 
-        // twigファイルを削除
-        $this->removeTwigFiles($container);
-
-        // ページ削除
-        $this->removePages($em);
-    }
-
-    /**
-     * @param array $meta
-     * @param ContainerInterface $container
-     */
-    public function uninstall(array $meta, ContainerInterface $container)
-    {
-        $em = $container->get('doctrine')->getManager();
-
-        // twigファイルを削除
-        $this->removeTwigFiles($container);
-
-        // ページ削除
-        $this->removePages($em);
+        // 初期値を保存
+        $TwoFactorAuthConfig = new TwoFactorAuthConfig();
+        $em->persist($TwoFactorAuthConfig);
+        $em->flush();
     }
 
     /**
@@ -90,13 +78,13 @@ class PluginManager extends AbstractPluginManager
     {
         // テンプレートファイルコピー
         $templatePath = $container->getParameter('eccube_theme_front_dir')
-            .'/TwoFactorAuthCustomer42/Resource/template/default';
+            . '/TwoFactorAuthCustomer42/Resource/template/default';
         $fs = new Filesystem();
         if ($fs->exists($templatePath)) {
             return;
         }
         $fs->mkdir($templatePath);
-        $fs->mirror(__DIR__.'/Resource/template/default', $templatePath);
+        $fs->mirror(__DIR__ . '/Resource/template/default', $templatePath);
     }
 
     /**
@@ -109,7 +97,7 @@ class PluginManager extends AbstractPluginManager
         foreach ($this->pages as $p) {
             $Page = $em->getRepository(Page::class)->findOneBy(['url' => $p[0]]);
             if (!$Page) {
-                /** @var \Eccube\Entity\Page $Page */
+                /** @var Page $Page */
                 $Page = $em->getRepository(Page::class)->newPage();
                 $Page->setEditType(Page::EDIT_TYPE_DEFAULT);
                 $Page->setUrl($p[0]);
@@ -134,6 +122,21 @@ class PluginManager extends AbstractPluginManager
     }
 
     /**
+     * @param array $meta
+     * @param ContainerInterface $container
+     */
+    public function disable(array $meta, ContainerInterface $container)
+    {
+        $em = $container->get('doctrine')->getManager();
+
+        // twigファイルを削除
+        $this->removeTwigFiles($container);
+
+        // ページ削除
+        $this->removePages($em);
+    }
+
+    /**
      * Twigファイルの削除
      *
      * @param ContainerInterface $container
@@ -141,7 +144,7 @@ class PluginManager extends AbstractPluginManager
     protected function removeTwigFiles(ContainerInterface $container)
     {
         $templatePath = $container->getParameter('eccube_theme_front_dir')
-            .'/TwoFactorAuthCustomer42';
+            . '/TwoFactorAuthCustomer42';
         $fs = new Filesystem();
         $fs->remove($templatePath);
     }
@@ -167,20 +170,17 @@ class PluginManager extends AbstractPluginManager
     }
 
     /**
-     * 設定の登録.
-     *
-     * @param EntityManagerInterface $em
+     * @param array $meta
+     * @param ContainerInterface $container
      */
-    protected function createConfig(EntityManagerInterface $em)
+    public function uninstall(array $meta, ContainerInterface $container)
     {
-        $TwoFactorAuthConfig = $em->find(TwoFactorAuthConfig::class, 1);
-        if ($TwoFactorAuthConfig) {
-            return;
-        }
+        $em = $container->get('doctrine')->getManager();
 
-        // 初期値を保存
-        $TwoFactorAuthConfig = new TwoFactorAuthConfig();
-        $em->persist($TwoFactorAuthConfig);
-        $em->flush();
+        // twigファイルを削除
+        $this->removeTwigFiles($container);
+
+        // ページ削除
+        $this->removePages($em);
     }
 }

@@ -13,21 +13,22 @@ file that was distributed with this source code.
 {% set body_class = 'mypage' %}
 
 {% block stylesheet %}
-<style>
-.ec-login-header {
-    background: #FFFFFF;
-}
-.ec-login-header > p {
-    text-align: center;
-    font: var(--unnamed-font-style-normal) normal medium 16px/22px YuGothic;
-    letter-spacing: var(--unnamed-character-spacing-0);
-    text-align: center;
-    font: normal normal medium 16px/22px YuGothic;
-    letter-spacing: 0px;
-    color: #525263;
-    opacity: 1;
-}
-</style>
+    <style>
+        .ec-login-header {
+            background: #FFFFFF;
+        }
+
+        .ec-login-header > p {
+            text-align: center;
+            font: var(--unnamed-font-style-normal) normal medium 16px/22px YuGothic;
+            letter-spacing: var(--unnamed-character-spacing-0);
+            text-align: center;
+            font: normal normal medium 16px/22px YuGothic;
+            letter-spacing: 0px;
+            color: #525263;
+            opacity: 1;
+        }
+    </style>
 {% endblock %}
 
 
@@ -38,10 +39,11 @@ file that was distributed with this source code.
         </div>
         <div class="ec-off2Grid">
             <div class="ec-off2Grid__cell">
-                <form name="input_onetime" id="input_onetime" method="post" action="{{ url('plg_customer_2fa_device_auth_input_onetime', {'secret_key': secret_key} ) }}">
+                <form name="input_onetime" id="input_onetime" method="post"
+                      action="{{ url('plg_customer_2fa_device_auth_input_onetime', {'secret_key': secret_key} ) }}">
                     {% if app.session.flashBag.has('eccube.login.target.path') %}
                         {% for targetPath in app.session.flashBag.peek('eccube.login.target.path') %}
-                            <input type="hidden" name="_target_path" value="{{ targetPath }}" />
+                            <input type="hidden" name="_target_path" value="{{ targetPath }}"/>
                         {% endfor %}
                     {% endif %}
                     <div class="ec-login ec-login-header">
