@@ -1,11 +1,11 @@
 {#
- This file is part of the Coupon plugin
+This file is part of EC-CUBE
 
- Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
- http://www.ec-cube.co.jp/
+Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+http://www.ec-cube.co.jp/
 
- For the full copyright and license information, please view the LICENSE
- file that was distributed with this source code.
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
 #}
 
 <script type="text/javascript">
@@ -16,10 +16,11 @@
 
 <div class="row" id="sms_use">
     <div class="col-3">
-        <div class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ 'admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip'|trans }}">
-        <span>{{ 'admin.setting.shop.shop.customer_two_factor_is_activate_sms'|trans }}</span>
-        <i class="fa fa-question-circle fa-lg ms-1"></i>
-    </div>
+        <div class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top"
+             title="{{ 'admin.setting.shop.shop.customer_two_factor_is_activate_sms_tooltip'|trans }}">
+            <span>{{ 'admin.setting.shop.shop.customer_two_factor_is_activate_sms'|trans }}</span>
+            <i class="fa fa-question-circle fa-lg ms-1"></i>
+        </div>
     </div>
     <div class="col mb-2">
         {{ form_widget(form.option_activate_device) }}

@@ -29,6 +29,14 @@ trait BaseInfoTrait
      * @ORM\Column(name="two_factor_auth_use", type="boolean", nullable=false, options={"default":false})
      */
     private bool $two_factor_auth_use;
+    /**
+     * SMS通知の設定
+     *
+     * @var bool
+     *
+     * @ORM\Column(name="option_activate_device", type="boolean", nullable=false, options={"default":false})
+     */
+    private bool $option_activate_device;
 
     /**
      * @return bool
@@ -45,15 +53,6 @@ trait BaseInfoTrait
     {
         $this->two_factor_auth_use = $two_factor_auth_use;
     }
-
-    /**
-     * SMS通知の設定
-     *
-     * @var bool
-     *
-     * @ORM\Column(name="option_activate_device", type="boolean", nullable=false, options={"default":false})
-     */
-    private bool $option_activate_device;
 
     /**
      * @return bool

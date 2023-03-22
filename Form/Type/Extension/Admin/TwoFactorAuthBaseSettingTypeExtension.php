@@ -40,10 +40,18 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public static function getExtendedTypes(): iterable
+    {
+        yield ShopMasterType::class;
+    }
+
+    /**
      * buildForm.
      *
      * @param FormBuilderInterface $builder
-     * @param array                $options
+     * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
@@ -57,19 +65,10 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
                 'required' => false,
                 'mapped' => true,
             ])
-            ->add('option_activate_device', ToggleSwitchType::class, [
-                'required' => false,
-                'mapped' => true,
-            ])
-            ;
+                ->add('option_activate_device', ToggleSwitchType::class, [
+                    'required' => false,
+                    'mapped' => true,
+                ]);
         });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getExtendedTypes(): iterable
-    {
-        yield ShopMasterType::class;
     }
 }

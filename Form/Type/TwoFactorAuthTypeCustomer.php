@@ -38,8 +38,7 @@ class TwoFactorAuthTypeCustomer extends AbstractType
                 },
                 'choice_label' => 'name',
                 'mapped' => true,
-            ])
-        ;
+            ]);
     }
 
     /**

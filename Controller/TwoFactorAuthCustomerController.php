@@ -50,7 +50,7 @@ class TwoFactorAuthCustomerController extends AbstractController
         CustomerRepository $customerRepository,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         Environment $twig
-        ) {
+    ) {
         $this->customerRepository = $customerRepository;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;

@@ -72,49 +72,6 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
     }
 
     /**
-     * @return $result
-     */
-    public function findOne()
-    {
-        return $this->findOneBy([], ['id' => 'DESC']);
-    }
-
-    /***
-     * 有効クッキーを取得する
-     *
-     * @param Customer $customer
-     * @param string $cookieName
-     * @return TwoFactorAuthCustomerCookie[]|null
-     */
-    public function searchForCookie(Customer $customer, string $cookieName)
-    {
-        $expireDate = Carbon::now()->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-        $something = $this->createQueryBuilder('tfcc')
-            ->where('tfcc.Customer = :customer_id')
-            ->andWhere('tfcc.cookie_name = :cookie_name')
-            ->andWhere('tfcc.cookie_expire_date > :expire_date')
-            ->setParameters([
-                'customer_id' => $customer->getId(),
-                'cookie_name' => $cookieName,
-                'expire_date' => $expireDate,
-            ])
-            ->getQuery()->getSQL();
-
-        return $this->createQueryBuilder('tfcc')
-            ->where('tfcc.Customer = :customer_id')
-            ->andWhere('tfcc.cookie_name = :cookie_name')
-            ->andWhere('tfcc.cookie_expire_date > :expire_date')
-            ->setParameters([
-                'customer_id' => $customer->getId(),
-                'cookie_name' => $cookieName,
-                'expire_date' => $expireDate,
-            ])
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
      * 過去のクッキーデータの取得
      *
      * @param Customer $customer
@@ -138,4 +95,53 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return TwoFactorAuthCustomerCookie|null $result
+     */
+    public function findOne()
+    {
+        return $this->findOneBy([], ['id' => 'DESC']);
+    }
+
+    /***
+     * 有効クッキーを取得する
+     *
+     * @param Customer $customer
+     * @param string $cookieName
+     * @return TwoFactorAuthCustomerCookie[]|null
+     */
+    public function searchForCookie(Customer $customer, string $cookieName)
+    {
+        $expireDate = Carbon::now()->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+        return $this->createQueryBuilder('tfcc')
+            ->where('tfcc.Customer = :customer_id')
+            ->andWhere('tfcc.cookie_name = :cookie_name')
+            ->andWhere('tfcc.cookie_expire_date > :expire_date')
+            ->setParameters([
+                'customer_id' => $customer->getId(),
+                'cookie_name' => $cookieName,
+                'expire_date' => $expireDate,
+            ])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /***
+     * 会員のクッキーを削除
+     *
+     * @param Customer $customer
+     */
+    public function deleteByCustomer(Customer $customer)
+    {
+        $em = $this->getEntityManager();
+        $em->beginTransaction();
+
+        $em->createQuery("DELETE Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie tfcc WHERE tfcc.Customer = :customer")->execute(['customer' => $customer]);
+        $em->flush();
+
+        $em->commit();
+    }
+
 }

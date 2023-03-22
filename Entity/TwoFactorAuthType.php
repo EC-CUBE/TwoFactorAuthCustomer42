@@ -77,6 +77,16 @@ class TwoFactorAuthType extends AbstractEntity
     }
 
     /**
+     * Get name.
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
      * Set name.
      *
      * @param string $name
@@ -91,13 +101,13 @@ class TwoFactorAuthType extends AbstractEntity
     }
 
     /**
-     * Get name.
+     * Get route.
      *
      * @return string
      */
-    public function getName()
+    public function getRoute()
     {
-        return $this->name;
+        return $this->route;
     }
 
     /**
@@ -112,16 +122,6 @@ class TwoFactorAuthType extends AbstractEntity
         $this->route = $route;
 
         return $this;
-    }
-
-    /**
-     * Get route.
-     *
-     * @return string
-     */
-    public function getRoute()
-    {
-        return $this->route;
     }
 
     /**

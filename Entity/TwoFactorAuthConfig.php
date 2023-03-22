@@ -84,6 +84,16 @@ class TwoFactorAuthConfig extends AbstractEntity
     }
 
     /**
+     * Get api_key.
+     *
+     * @return string
+     */
+    public function getApiKey()
+    {
+        return $this->api_key;
+    }
+
+    /**
      * Set api_key.
      *
      * @param string $apiKey
@@ -98,13 +108,13 @@ class TwoFactorAuthConfig extends AbstractEntity
     }
 
     /**
-     * Get api_key.
+     * Get api_secret.
      *
      * @return string
      */
-    public function getApiKey()
+    public function getApiSecret()
     {
-        return $this->api_key;
+        return $this->api_secret;
     }
 
     /**
@@ -122,13 +132,13 @@ class TwoFactorAuthConfig extends AbstractEntity
     }
 
     /**
-     * Get api_secret.
+     * Get from phone number.
      *
      * @return string
      */
-    public function getApiSecret()
+    public function getFromPhonenumber()
     {
-        return $this->api_secret;
+        return $this->from_phone_number;
     }
 
     /**
@@ -145,14 +155,34 @@ class TwoFactorAuthConfig extends AbstractEntity
         return $this;
     }
 
-    /**
-     * Get from phone number.
-     *
-     * @return string
-     */
-    public function getFromPhonenumber()
+    public function addIncludeRoute(string $route)
     {
-        return $this->from_phone_number;
+        $routes = $this->getRoutes($this->getIncludeRoutes());
+
+        if (!in_array($route, $routes)) {
+            $this->setIncludeRoutes($this->include_routes.PHP_EOL.$route);
+        }
+
+        return $this;
+    }
+
+    private function getRoutes(?string $routes): array
+    {
+        if (!$routes) {
+            return [];
+        }
+
+        return explode(PHP_EOL, $routes);
+    }
+
+    /**
+     * Get include_routes.
+     *
+     * @return string|null
+     */
+    public function getIncludeRoutes()
+    {
+        return $this->include_routes;
     }
 
     /**
@@ -169,27 +199,6 @@ class TwoFactorAuthConfig extends AbstractEntity
         return $this;
     }
 
-    /**
-     * Get include_routes.
-     *
-     * @return string|null
-     */
-    public function getIncludeRoutes()
-    {
-        return $this->include_routes;
-    }
-
-    public function addIncludeRoute(string $route)
-    {
-        $routes = $this->getRoutes($this->getIncludeRoutes());
-
-        if (!in_array($route, $routes)) {
-            $this->setIncludeRoutes($this->include_routes.PHP_EOL.$route);
-        }
-
-        return $this;
-    }
-
     public function removeIncludeRoute(string $route)
     {
         $routes = $this->getRoutes($this->getIncludeRoutes());
@@ -200,15 +209,6 @@ class TwoFactorAuthConfig extends AbstractEntity
         }
 
         return $this;
-    }
-
-    private function getRoutes(?string $routes): array
-    {
-        if (!$routes) {
-            return [];
-        }
-
-        return explode(PHP_EOL, $routes);
     }
 
     private function getRoutesAsString(array $routes): string
