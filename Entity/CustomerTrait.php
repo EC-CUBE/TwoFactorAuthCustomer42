@@ -77,19 +77,6 @@ trait CustomerTrait
     private $TwoFactorAuthCustomerCookies;
 
     /**
-     * @param string $hashedOneTimePassword
-     *
-     * @return void
-     */
-    public function createDeviceAuthOneTimeToken(string $hashedOneTimePassword): void
-    {
-        $now = new \DateTime();
-
-        $this->setDeviceAuthOneTimeToken($hashedOneTimePassword);
-        $this->setDeviceAuthOneTimeTokenExpire($now->modify('+5 mins'));
-    }
-
-    /**
      * @return string
      */
     public function getDeviceAuthOneTimeToken(): ?string
