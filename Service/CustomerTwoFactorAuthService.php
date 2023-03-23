@@ -108,12 +108,23 @@ class CustomerTwoFactorAuthService
         'shopping',
         'shopping_login',
     ];
+
+    /**
+     * @var TwoFactorAuthCustomerCookieRepository
+     */
     private TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository;
+
+    /**
+     * @var int
+     */
+    private int $tokenLength;
 
     /**
      * @var PasswordHasherFactoryInterface
      */
     private PasswordHasherFactoryInterface $hashFactory;
+
+    private int $tokenActiveDurationSeconds;
 
     /**
      * constructor.
@@ -144,6 +155,8 @@ class CustomerTwoFactorAuthService
 
         $this->expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
         $this->route_expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
+        $this->tokenLength = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_length');
+        $this->tokenActiveDurationSeconds = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_expire_after_seconds');
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
         $this->twoFactorCustomerCookieRepository = $twoFactorCustomerCookieRepository;
@@ -383,28 +396,28 @@ class CustomerTwoFactorAuthService
         }
     }
 
-    public function generateOneTimeToken(): string
+    /**
+     * @throws \Exception - random_int()でphpのランダム機能が見つからないば場合
+     */
+    public function generateOneTimeTokenValue(?int $tokenLengthOverride = null): string
     {
         $token = '';
-        for ($i = 0; $i < 6; $i++) {
-            $token .= (string) random_int(0, 9);
+        for ($i = 0; $i < ($tokenLengthOverride ?? $this->tokenLength); $i++) {
+            $token .= random_int(0, 9);
         }
 
         return $token;
     }
 
-    /***
-     * @param string $input
-     * @return string
+    /**
+     * @throws \Exception
      */
-    public function readOneTimeToken(string $input): string
+    public function generateExpiryDate(?int $tokenActiveDurationSecondsOverride = null): \DateTime
     {
-        $passwordEncoder = $this->hashFactory->getPasswordHasher(Customer::class);
-
-        return $passwordEncoder->hash($input);
+        return (new \DateTime())->add(new \DateInterval('PT'.($tokenActiveDurationSecondsOverride ?? $this->tokenActiveDurationSeconds).'S'));
     }
 
-    public function hashOneTimeToken($token): string
+    public function hashOneTimeToken(string $token): string
     {
         // ハッシュジェネレーターをエンティティに持って来る
         return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
