@@ -14,6 +14,7 @@
 namespace Plugin\TwoFactorAuthCustomer42;
 
 use Eccube\Event\TemplateEvent;
+use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -22,12 +23,18 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class Event implements EventSubscriberInterface
 {
     /**
+     * @var bool
+     */
+    private bool $hasActiveAuthType;
+
+    /**
      * Event constructor.
      *
      * @throws \Exception
      */
-    public function __construct()
+    public function __construct(TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository)
     {
+        $this->hasActiveAuthType = $twoFactorAuthTypeRepository->findOneBy(['isDisabled' => false]) !== null;
     }
 
     public static function getSubscribedEvents(): array
@@ -46,13 +53,15 @@ class Event implements EventSubscriberInterface
      */
     public function onRenderAdminShopSettingEdit(TemplateEvent $event)
     {
-        // add twig
+        // add 本人確認認証 twig
         $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/shop_edit_sms.twig';
         $event->addSnippet($twig);
 
-        // add twig
-        $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/shop_edit_tfa.twig';
-        $event->addSnippet($twig);
+        if ($this->hasActiveAuthType) {
+            // add ２段階認証設定 twig
+            $twig = 'TwoFactorAuthCustomer42/Resource/template/admin/shop_edit_tfa.twig';
+            $event->addSnippet($twig);
+        }
     }
 
     /**
