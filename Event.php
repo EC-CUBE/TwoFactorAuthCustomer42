@@ -13,9 +13,7 @@
 
 namespace Plugin\TwoFactorAuthCustomer42;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Eccube\Event\TemplateEvent;
-use Eccube\Repository\BaseInfoRepository;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -24,16 +22,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class Event implements EventSubscriberInterface
 {
-    /**
-     * @var \Eccube\Entity\BaseInfo
-     */
-    private \Eccube\Entity\BaseInfo $BaseInfo;
-
-    /**
-     * @var EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-
     /**
      * @var bool
      */
@@ -44,14 +32,9 @@ class Event implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function __construct(
-        BaseInfoRepository $baseInfoRepository,
-        TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
-        EntityManagerInterface $entityManager
-    ) {
-        $this->BaseInfo = $baseInfoRepository->get();
+    public function __construct(TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository)
+    {
         $this->hasActiveAuthType = $twoFactorAuthTypeRepository->findOneBy(['isDisabled' => false]) !== null;
-        $this->entityManager = $entityManager;
     }
 
     public static function getSubscribedEvents(): array
