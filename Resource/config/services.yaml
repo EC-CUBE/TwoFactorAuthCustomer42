@@ -20,7 +20,6 @@ parameters:
   env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_COOKIE_NAME): 'plugin_eccube_route_customer_2fa'
   env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE): '3600'
   env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH): '64'
-  env(PLUGIN_ECCUBE_2FA_ONE_TIME_TOKEN_LENGTH): '6'
   env(PLUGIN_ECCUBE_2FA_ONE_TIME_TOKEN_EXPIRE_AFTER_SECONDS): '300'
 
   plugin_eccube_2fa_customer_cookie_name: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME)%'
@@ -28,5 +27,4 @@ parameters:
   plugin_eccube_2fa_customer_expire: '%env(PLUGIN_ECCUBE_2FA_CUSTOMER_EXPIRE)%'
   plugin_eccube_2fa_route_customer_expire: '%env(PLUGIN_ECCUBE_2FA_ROUTE_CUSTOMER_EXPIRE)%'
   plugin_eccube_2fa_route_cookie_value_character_length: '%env(PLUGIN_ECCUBE_2FA_ROUTE_COOKIE_VALUE_CHARACTER_LENGTH)%'
-  plugin_eccube_2fa_one_time_token_length: '%env(PLUGIN_ECCUBE_2FA_ONE_TIME_TOKEN_LENGTH)%'
   plugin_eccube_2fa_one_time_token_expire_after_seconds: '%env(PLUGIN_ECCUBE_2FA_ONE_TIME_TOKEN_EXPIRE_AFTER_SECONDS)%'

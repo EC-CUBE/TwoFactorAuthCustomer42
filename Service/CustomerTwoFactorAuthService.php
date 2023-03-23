@@ -43,6 +43,12 @@ class CustomerTwoFactorAuthService
      * @var string コールバックURL
      */
     public const SESSION_CALL_BACK_URL = 'plugin_eccube_customer_2fa_call_back_url';
+
+    /**
+     * ワンタイムトークンの桁数
+     */
+    public const TOKEN_LENGTH = 6;
+
     /**
      * @var ContainerInterface
      */
@@ -115,11 +121,6 @@ class CustomerTwoFactorAuthService
     private TwoFactorAuthCustomerCookieRepository $twoFactorCustomerCookieRepository;
 
     /**
-     * @var int
-     */
-    private int $tokenLength;
-
-    /**
      * @var PasswordHasherFactoryInterface
      */
     private PasswordHasherFactoryInterface $hashFactory;
@@ -155,7 +156,6 @@ class CustomerTwoFactorAuthService
 
         $this->expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
         $this->route_expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
-        $this->tokenLength = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_length');
         $this->tokenActiveDurationSeconds = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_expire_after_seconds');
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
@@ -402,7 +402,7 @@ class CustomerTwoFactorAuthService
     public function generateOneTimeTokenValue(?int $tokenLengthOverride = null): string
     {
         $token = '';
-        for ($i = 0; $i < ($tokenLengthOverride ?? $this->tokenLength); $i++) {
+        for ($i = 0; $i < ($tokenLengthOverride ?? self::TOKEN_LENGTH); $i++) {
             $token .= random_int(0, 9);
         }
 
