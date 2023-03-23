@@ -20,7 +20,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           tar cvzf ../${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.tar.gz ./*
       - name: Upload binaries to release of TGZ
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ runner.workspace }}/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.tar.gz
