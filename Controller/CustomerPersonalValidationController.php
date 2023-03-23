@@ -219,7 +219,7 @@ class CustomerPersonalValidationController extends AbstractController
 
         // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
         if (
-            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->readOneTimeToken($token) ||
+            $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->hashOneTimeToken($token) ||
             $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
             return false;
         }
@@ -240,12 +240,15 @@ class CustomerPersonalValidationController extends AbstractController
      * @throws SyntaxError
      * @throws ConfigurationException
      * @throws TwilioException
+     * @throws \Exception
      */
     private function sendDeviceToken(Customer $Customer, string $phoneNumber)
     {
         // ワンタイムトークン生成・保存
-        $token = $this->customerTwoFactorAuthService->generateOneTimeToken();
-        $Customer->createDeviceAuthOneTimeToken($this->customerTwoFactorAuthService->hashOneTimeToken($token));
+        $token = $this->customerTwoFactorAuthService->generateOneTimeTokenValue();
+
+        $Customer->setDeviceAuthOneTimeToken($this->customerTwoFactorAuthService->hashOneTimeToken($token));
+        $Customer->setDeviceAuthOneTimeTokenExpire($this->customerTwoFactorAuthService->generateExpiryDate());
 
         $this->entityManager->persist($Customer);
         $this->entityManager->flush();
