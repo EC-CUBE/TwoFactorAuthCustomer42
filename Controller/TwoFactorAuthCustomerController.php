@@ -59,7 +59,7 @@ class TwoFactorAuthCustomerController extends AbstractController
     /**
      * (ログイン時)二段階認証設定（選択）画面.
      *
-     * @Route("/two_factor_auth/select_type", name="plg_customer_2fa_auth_type_select", methods={"GET", "POST"})
+     * @Route("/mypage/two_factor_auth/select_type", name="plg_customer_2fa_auth_type_select", methods={"GET", "POST"})
      * @Template("TwoFactorAuthCustomer42/Resource/template/default/tfa/select_type.twig")
      */
     public function selectAuthType(Request $request)
