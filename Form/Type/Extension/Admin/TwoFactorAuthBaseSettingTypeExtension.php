@@ -63,7 +63,7 @@ class TwoFactorAuthBaseSettingTypeExtension extends AbstractTypeExtension
         $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event) {
             $form = $event->getForm();
 
-            if ($this->entityManager->getRepository(TwoFactorAuthType::class)->findOneBy(['isDisabled' => false]) !== null) {
+            if ($this->entityManager->getRepository(TwoFactorAuthType::class)->count(['isDisabled' => false]) > 0) {
                 $form->add('two_factor_auth_use', ToggleSwitchType::class, [
                     'required' => false,
                     'mapped' => true,
