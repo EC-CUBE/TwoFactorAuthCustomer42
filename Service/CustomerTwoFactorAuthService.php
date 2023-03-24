@@ -374,7 +374,7 @@ class CustomerTwoFactorAuthService
             ->messages
             ->create('+81'.$phoneNumber,
                 [
-                    'from' => $this->twoFactorAuthConfig->getFromPhonenumber(),
+                    'from' => $this->twoFactorAuthConfig->getFromPhoneNumber(),
                     'body' => $body,
                 ]
             );
