@@ -1,6 +1,6 @@
 eccube:
   rate_limiter:
-    device_auth_request:
+    plg_customer_2fa_device_auth_send_onetime:
       # 実行するルーティングを指定します。
       route: plg_customer_2fa_device_auth_send_onetime
       # 実行するmethodを指定します。デフォルトはPOSTです。
