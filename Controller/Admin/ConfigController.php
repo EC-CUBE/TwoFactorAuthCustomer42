@@ -65,7 +65,7 @@ class ConfigController extends AbstractController
             // フォームの入力データを取得
             $SmsConfig = $form->getData();
 
-            // パスワードが変更されていたら、パスワードを保存する
+            // APIの秘密キーが変更されていたら、APIの秘密キーを保存する
             if ($SmsConfig->getPlainApiSecret() !== $this->eccubeConfig['eccube_default_password']) {
                 $SmsConfig->setApiSecret($SmsConfig->getPlainApiSecret());
             }
