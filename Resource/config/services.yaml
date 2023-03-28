@@ -11,6 +11,10 @@ eccube:
       limit: 5
       # インターバルを設定します。
       interval: '30 minutes'
+    device_auth_request_email:
+      route: ~
+      limit: 10
+      interval: '30 minutes'
 
 parameters:
   env(PLUGIN_ECCUBE_2FA_CUSTOMER_COOKIE_NAME): 'plugin_eccube_customer_2fa'

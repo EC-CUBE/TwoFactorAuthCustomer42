@@ -22,6 +22,8 @@ use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -47,6 +49,7 @@ class CustomerPersonalValidationController extends AbstractController
      * @var Environment
      */
     protected Environment $twig;
+    private RateLimiterFactory $deviceAuthRequestEmailLimiter;
 
     /**
      * TwoFactorAuthCustomerController constructor.
@@ -56,6 +59,7 @@ class CustomerPersonalValidationController extends AbstractController
      * @param Environment $twig
      */
     public function __construct(
+        RateLimiterFactory $deviceAuthRequestEmailLimiter,
         CustomerRepository $customerRepository,
         CustomerTwoFactorAuthService $customerTwoFactorAuthService,
         Environment $twig
@@ -63,6 +67,7 @@ class CustomerPersonalValidationController extends AbstractController
         $this->customerRepository = $customerRepository;
         $this->customerTwoFactorAuthService = $customerTwoFactorAuthService;
         $this->twig = $twig;
+        $this->deviceAuthRequestEmailLimiter = $deviceAuthRequestEmailLimiter;
     }
 
     /**
@@ -86,15 +91,23 @@ class CustomerPersonalValidationController extends AbstractController
         $error = null;
         /** @var Customer $Customer */
         $Customer = $this->customerRepository->getProvisionalCustomerBySecretKey($secret_key);
+
         if ($Customer === null) {
             throw $this->createNotFoundException();
         }
+
         $builder = $this->formFactory->createBuilder(TwoFactorAuthSmsTypeCustomer::class);
         // 入力フォーム生成
         $form = $builder->getForm();
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
+                // メールでスロットリングをかける
+                $limiter = $this->deviceAuthRequestEmailLimiter->create($Customer->getEmail());
+                if (!$limiter->consume()->isAccepted()) {
+                    throw new TooManyRequestsHttpException();
+                }
+
                 $token = $form->get('one_time_token')->getData();
                 if (!$this->checkDeviceToken($Customer, $token)) {
                     // ワンタイムトークン不一致 or 有効期限切れ
@@ -148,6 +161,7 @@ class CustomerPersonalValidationController extends AbstractController
      * @param $secret_key
      *
      * @return array|RedirectResponse
+     *
      * @throws ConfigurationException
      * @throws LoaderError
      * @throws RuntimeError
@@ -173,6 +187,11 @@ class CustomerPersonalValidationController extends AbstractController
         if ('POST' === $request->getMethod()) {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
+                // メールでスロットリングをかける
+                $limiter = $this->deviceAuthRequestEmailLimiter->create($Customer->getEmail());
+                if (!$limiter->consume()->isAccepted()) {
+                    throw new TooManyRequestsHttpException();
+                }
                 // 認証済みの電話番号でないかチェック
                 $phoneNumber = $form->get('phone_number')->getData();
                 if ($this->customerRepository->findOneBy(['device_authed_phone_number' => $phoneNumber]) === null) {
