@@ -68,9 +68,15 @@ class TwoFactorAuthCustomerController extends AbstractController
             return $this->redirectToRoute($this->getCallbackRoute());
         }
 
-        $error = null;
         /** @var Customer $Customer */
         $Customer = $this->getUser();
+
+        // 2段階認証方式が選択されている場合は、その方式の初回認証画面へ遷移
+        if ($Customer !== null && $Customer->getTwoFactorAuthType() !== null) {
+            return $this->redirectToRoute($Customer->getTwoFactorAuthType()->getRoute());
+        }
+
+        $error = null;
         $builder = $this->formFactory->createBuilder(TwoFactorAuthTypeCustomer::class);
         // 入力フォーム生成
         $form = $builder->getForm();
