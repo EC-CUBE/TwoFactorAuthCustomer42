@@ -55,17 +55,15 @@ class TwoFactorAuthConfigType extends AbstractType
                     ),
                 ],
             ])
-            ->add('api_secret', TextType::class, [
+            ->add('plain_api_secret', TextType::class, [
                 'required' => true,
                 'constraints' => [
                     new Assert\NotBlank(),
                     new Assert\Length(['max' => $this->eccubeConfig['eccube_stext_len']]),
-                    new Assert\Regex(
-                        [
-                            'pattern' => '/^[a-zA-Z0-9]+$/i',
-                            'message' => 'form_error.graph_only',
-                        ]
-                    ),
+                    new Assert\Regex([
+                        'pattern' => $this->eccubeConfig['eccube_password_pattern'],
+                        'message' => 'form_error.password_pattern_invalid',
+                    ]),
                 ],
             ])
             ->add('from_phone_number', TextType::class, [
