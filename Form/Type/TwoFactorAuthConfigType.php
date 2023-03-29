@@ -19,8 +19,12 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class TwoFactorAuthConfigType extends AbstractType
 {
@@ -29,14 +33,17 @@ class TwoFactorAuthConfigType extends AbstractType
      */
     protected $eccubeConfig;
 
+    protected ValidatorInterface $validator;
+
     /**
      * TwoFactorAuthConfigType constructor.
      *
      * @param EccubeConfig $eccubeConfig
      */
-    public function __construct(EccubeConfig $eccubeConfig)
+    public function __construct(EccubeConfig $eccubeConfig, ValidatorInterface $validator)
     {
         $this->eccubeConfig = $eccubeConfig;
+        $this->validator = $validator;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -60,12 +67,6 @@ class TwoFactorAuthConfigType extends AbstractType
                 'constraints' => [
                     new Assert\NotBlank(),
                     new Assert\Length(['max' => $this->eccubeConfig['eccube_stext_len']]),
-                    new Assert\Regex(
-                        [
-                            'pattern' => '/^[a-zA-Z0-9]+$/i',
-                            'message' => 'form_error.graph_only',
-                        ]
-                    ),
                 ],
             ])
             ->add('from_phone_number', TextType::class, [
@@ -89,6 +90,25 @@ class TwoFactorAuthConfigType extends AbstractType
                     ]),
                 ],
             ]);
+
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+            $form = $event->getForm();
+            $data = $event->getData();
+
+            if ($data['plain_api_secret'] !== $this->eccubeConfig['eccube_default_password']) {
+                $errors = $this->validator->validate($data['plain_api_secret'], [
+                    new Assert\Regex([
+                        'pattern' => '/^[a-zA-Z0-9]+$/i',
+                        'message' => 'form_error.graph_only',
+                    ]),
+                ]);
+                if ($errors) {
+                    foreach ($errors as $error) {
+                        $form['plain_api_secret']->addError(new FormError($error->getMessage()));
+                    }
+                }
+            }
+        });
     }
 
     /**
