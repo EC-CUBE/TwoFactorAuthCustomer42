@@ -1,5 +1,16 @@
 eccube:
   rate_limiter:
+    plg_customer_2fa_device_auth_input_onetime:
+      # 実行するルーティングを指定します。
+      route: plg_customer_2fa_device_auth_input_onetime
+      # 実行するmethodを指定します。デフォルトはPOSTです。
+      method: [ 'POST' ]
+      # スロットリングの制御方法を設定します。ip・customerを指定できます。
+      type: [ 'ip', 'customer' ]
+      # 試行回数を設定します。
+      limit: 5
+      # インターバルを設定します。
+      interval: '30 minutes'
     plg_customer_2fa_device_auth_send_onetime:
       # 実行するルーティングを指定します。
       route: plg_customer_2fa_device_auth_send_onetime
