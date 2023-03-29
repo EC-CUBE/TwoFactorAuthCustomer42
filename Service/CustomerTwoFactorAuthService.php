@@ -45,11 +45,6 @@ class CustomerTwoFactorAuthService
     public const SESSION_CALL_BACK_URL = 'plugin_eccube_customer_2fa_call_back_url';
 
     /**
-     * ワンタイムトークンの桁数
-     */
-    public const TOKEN_LENGTH = 6;
-
-    /**
      * @var ContainerInterface
      */
     protected $container;
@@ -98,6 +93,11 @@ class CustomerTwoFactorAuthService
      * @var TwoFactorAuthConfig
      */
     private $twoFactorAuthConfig;
+
+    /**
+     * @var int
+     */
+    private int $tokenLength;
 
     /**
      * @var array
@@ -156,6 +156,8 @@ class CustomerTwoFactorAuthService
 
         $this->expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_customer_expire');
         $this->route_expire = (int) $this->eccubeConfig->get('plugin_eccube_2fa_route_customer_expire');
+
+        $this->tokenLength = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_length');
         $this->tokenActiveDurationSeconds = (int) $this->eccubeConfig->get('plugin_eccube_2fa_one_time_token_expire_after_seconds');
 
         $this->twoFactorAuthConfig = $twoFactorAuthConfigRepository->findOne();
@@ -372,7 +374,7 @@ class CustomerTwoFactorAuthService
             ->messages
             ->create('+81'.$phoneNumber,
                 [
-                    'from' => $this->twoFactorAuthConfig->getFromPhonenumber(),
+                    'from' => $this->twoFactorAuthConfig->getFromPhoneNumber(),
                     'body' => $body,
                 ]
             );
@@ -402,10 +404,10 @@ class CustomerTwoFactorAuthService
     /**
      * @throws \Exception - random_int()でphpのランダム機能が見つからないば場合
      */
-    public function generateOneTimeTokenValue(?int $tokenLengthOverride = null): string
+    public function generateOneTimeTokenValue(): string
     {
         $token = '';
-        for ($i = 0; $i < ($tokenLengthOverride ?? self::TOKEN_LENGTH); $i++) {
+        for ($i = 0; $i < $this->tokenLength; $i++) {
             $token .= random_int(0, 9);
         }
 
@@ -415,9 +417,9 @@ class CustomerTwoFactorAuthService
     /**
      * @throws \Exception
      */
-    public function generateExpiryDate(?int $tokenActiveDurationSecondsOverride = null): \DateTime
+    public function generateExpiryDate(): \DateTime
     {
-        return (new \DateTime())->add(new \DateInterval('PT'.($tokenActiveDurationSecondsOverride ?? $this->tokenActiveDurationSeconds).'S'));
+        return (new \DateTime())->add(new \DateInterval('PT'.$this->tokenActiveDurationSeconds.'S'));
     }
 
     public function hashOneTimeToken(string $token): string

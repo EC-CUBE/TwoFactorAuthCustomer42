@@ -136,7 +136,7 @@ class TwoFactorAuthConfig extends AbstractEntity
      *
      * @return string
      */
-    public function getFromPhonenumber()
+    public function getFromPhoneNumber()
     {
         return $this->from_phone_number;
     }
@@ -144,13 +144,13 @@ class TwoFactorAuthConfig extends AbstractEntity
     /**
      * Set from phone number.
      *
-     * @param string $fromTel
+     * @param string $fromPhoneNumber
      *
      * @return TwoFactorAuthConfig
      */
-    public function setFromPhonenumber($fromTel)
+    public function setFromPhoneNumber(string $fromPhoneNumber)
     {
-        $this->from_phone_number = $fromTel;
+        $this->from_phone_number = $fromPhoneNumber;
 
         return $this;
     }

@@ -95,8 +95,8 @@ class PluginManager extends AbstractPluginManager
     protected function createPages(EntityManagerInterface $em)
     {
         foreach ($this->pages as $p) {
-            $Page = $em->getRepository(Page::class)->findOneBy(['url' => $p[0]]);
-            if (!$Page) {
+            $hasPage = $em->getRepository(Page::class)->count(['url' => $p[0]]) > 0;
+            if (!$hasPage) {
                 /** @var Page $Page */
                 $Page = $em->getRepository(Page::class)->newPage();
                 $Page->setEditType(Page::EDIT_TYPE_DEFAULT);
