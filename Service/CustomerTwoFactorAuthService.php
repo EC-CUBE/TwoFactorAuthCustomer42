@@ -404,10 +404,10 @@ class CustomerTwoFactorAuthService
     /**
      * @throws \Exception - random_int()でphpのランダム機能が見つからないば場合
      */
-    public function generateOneTimeTokenValue(?int $tokenLengthOverride = null): string
+    public function generateOneTimeTokenValue(): string
     {
         $token = '';
-        for ($i = 0; $i < ($tokenLengthOverride ?? $this->tokenLength); $i++) {
+        for ($i = 0; $i < $this->tokenLength; $i++) {
             $token .= random_int(0, 9);
         }
 
@@ -417,9 +417,9 @@ class CustomerTwoFactorAuthService
     /**
      * @throws \Exception
      */
-    public function generateExpiryDate(?int $tokenActiveDurationSecondsOverride = null): \DateTime
+    public function generateExpiryDate(): \DateTime
     {
-        return (new \DateTime())->add(new \DateInterval('PT'.($tokenActiveDurationSecondsOverride ?? $this->tokenActiveDurationSeconds).'S'));
+        return (new \DateTime())->add(new \DateInterval('PT'.$this->tokenActiveDurationSeconds.'S'));
     }
 
     public function hashOneTimeToken(string $token): string
