@@ -16,6 +16,7 @@ namespace Plugin\TwoFactorAuthCustomer42\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Eccube\Entity\AbstractEntity;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * TwoFactorConfig
@@ -51,6 +52,12 @@ class TwoFactorAuthConfig extends AbstractEntity
      * @ORM\Column(name="api_secret", type="string", nullable=true, length=200)
      */
     private $api_secret = null;
+
+    /**
+     * @Assert\NotBlank()
+     * @Assert\Length(max=4096)
+     */
+    private $plain_api_secret;
 
     /**
      * @var string
@@ -214,5 +221,25 @@ class TwoFactorAuthConfig extends AbstractEntity
     private function getRoutesAsString(array $routes): string
     {
         return implode(PHP_EOL, $routes);
+    }
+
+    /**
+     * @param string|null $plain_api_secret
+     *
+     * @return TwoFactorAuthConfig
+     */
+    public function setPlainApiSecret(?string $plain_api_secret): TwoFactorAuthConfig
+    {
+        $this->plain_api_secret = $plain_api_secret;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlainApiSecret(): ?string
+    {
+        return $this->plain_api_secret;
     }
 }

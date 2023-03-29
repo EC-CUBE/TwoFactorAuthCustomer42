@@ -55,7 +55,7 @@ class TwoFactorAuthConfigType extends AbstractType
                     ),
                 ],
             ])
-            ->add('api_secret', TextType::class, [
+            ->add('plain_api_secret', TextType::class, [
                 'required' => true,
                 'constraints' => [
                     new Assert\NotBlank(),

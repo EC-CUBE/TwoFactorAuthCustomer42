@@ -51,6 +51,12 @@ class ConfigController extends AbstractController
     {
         // 設定情報、フォーム情報を取得
         $SmsConfig = $this->smsConfigRepository->findOne();
+        // APIの秘密キーが設定されている場合、マスキングする
+        if (!empty($SmsConfig->getApiSecret())) {
+            // APIの秘密キーをマスキングできるため、デフォルト値を設定
+            $SmsConfig->setPlainApiSecret($this->eccubeConfig['eccube_default_password']);
+        }
+
         $form = $this->createForm(TwoFactorAuthConfigType::class, $SmsConfig);
         $form->handleRequest($request);
 
@@ -58,6 +64,11 @@ class ConfigController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // フォームの入力データを取得
             $SmsConfig = $form->getData();
+
+            // APIの秘密キーが変更されていたら、APIの秘密キーを保存する
+            if ($SmsConfig->getPlainApiSecret() !== $this->eccubeConfig['eccube_default_password']) {
+                $SmsConfig->setApiSecret($SmsConfig->getPlainApiSecret());
+            }
 
             // フォームの入力データを保存
             $this->entityManager->persist($SmsConfig);
