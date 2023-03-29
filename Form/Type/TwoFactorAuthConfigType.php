@@ -60,10 +60,12 @@ class TwoFactorAuthConfigType extends AbstractType
                 'constraints' => [
                     new Assert\NotBlank(),
                     new Assert\Length(['max' => $this->eccubeConfig['eccube_stext_len']]),
-                    new Assert\Regex([
-                        'pattern' => $this->eccubeConfig['eccube_password_pattern'],
-                        'message' => 'form_error.password_pattern_invalid',
-                    ]),
+                    new Assert\Regex(
+                        [
+                            'pattern' => '/^[a-zA-Z0-9]+$/i',
+                            'message' => 'form_error.graph_only',
+                        ]
+                    ),
                 ],
             ])
             ->add('from_phone_number', TextType::class, [
