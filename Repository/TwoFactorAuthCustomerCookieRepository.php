@@ -55,6 +55,7 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
         int $CookieValueCharacterLength
     ): TwoFactorAuthCustomerCookie {
         /** @var TwoFactorAuthCustomerCookie[]|null $previousCookies */
+
         $previousCookies = $this->findOldCookies($customer, $cookieName);
         foreach ($previousCookies as $cookie) {
             $this->getEntityManager()->remove($cookie);
@@ -138,7 +139,13 @@ class TwoFactorAuthCustomerCookieRepository extends AbstractRepository
         $em = $this->getEntityManager();
         $em->beginTransaction();
 
-        $em->createQuery("DELETE Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie tfcc WHERE tfcc.Customer = :customer")->execute(['customer' => $customer]);
+        $this->createQueryBuilder('tfcc')
+            ->delete()
+            ->where('tfcc.Customer = :customer')
+            ->setParameter('customer', $customer)
+            ->getQuery()
+            ->execute();
+
         $em->flush();
 
         $em->commit();
