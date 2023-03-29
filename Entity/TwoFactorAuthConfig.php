@@ -53,10 +53,6 @@ class TwoFactorAuthConfig extends AbstractEntity
      */
     private $api_secret = null;
 
-    /**
-     * @Assert\NotBlank()
-     * @Assert\Length(max=4096)
-     */
     private $plain_api_secret;
 
     /**
