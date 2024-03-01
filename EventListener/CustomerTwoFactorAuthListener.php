@@ -19,13 +19,12 @@ use Eccube\Entity\Customer;
 use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Request\Context;
+use Eccube\Session\Session;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthCustomerCookieRepository;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -83,7 +82,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
      * @param TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository
      * @param BaseInfoRepository $baseInfoRepository
-     * @param SessionInterface $session
+     * @param Session $session
      */
     public function __construct(
         Context $requestContext,
@@ -92,7 +91,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
         TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository,
         BaseInfoRepository $baseInfoRepository,
-        SessionInterface $session
+        Session $session
     ) {
         $this->requestContext = $requestContext;
         $this->router = $router;
