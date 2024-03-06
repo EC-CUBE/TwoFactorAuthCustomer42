@@ -19,12 +19,12 @@ use Eccube\Entity\Customer;
 use Eccube\Entity\Master\CustomerStatus;
 use Eccube\Repository\BaseInfoRepository;
 use Eccube\Request\Context;
-use Eccube\Session\Session;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthTypeRepository;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthCustomerCookieRepository;
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -82,7 +82,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
      * @param TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository
      * @param BaseInfoRepository $baseInfoRepository
-     * @param Session $session
+     * @param RequestStack $requestStack
      */
     public function __construct(
         Context $requestContext,
@@ -91,7 +91,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
         TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository,
         BaseInfoRepository $baseInfoRepository,
-        Session $session
+        RequestStack $requestStack
     ) {
         $this->requestContext = $requestContext;
         $this->router = $router;
@@ -99,7 +99,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->baseInfo = $baseInfoRepository->find(1);
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->twoFactorAuthCustomerCookieRepository = $twoFactorAuthCustomerCookieRepository;
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
 
         $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
