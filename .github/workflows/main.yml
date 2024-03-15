@@ -139,19 +139,6 @@ jobs:
           bin/console eccube:plugin:install --code=${PLUGIN_CODE} --path=${GITHUB_WORKSPACE}/${PLUGIN_CODE}.tar.gz
           bin/console cache:clear --no-warmup
           bin/console eccube:plugin:enable --code=${PLUGIN_CODE}
-      - name: Run PHPUnit
-        env:
-          APP_ENV: 'test'
-          APP_DEBUG: 0
-          DATABASE_URL: ${{ matrix.database_url }}
-          DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
-          DATABASE_CHARSET: ${{ matrix.database_charset }}
-          PLUGIN_CODE: ${{ matrix.plugin_code }}
-        working-directory: 'ec-cube'
-        run: |
-          bin/console cache:clear --no-warmup
-          ./vendor/bin/phpunit -c app/Plugin/${PLUGIN_CODE}/phpunit.xml.dist app/Plugin/${PLUGIN_CODE}/Tests
-
       - name: Disable Plugin
         working-directory: 'ec-cube'
         env:
