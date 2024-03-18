@@ -205,9 +205,9 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      */
     public function logoutEvent(LogoutEvent $logoutEvent)
     {
-        $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
         $Customer = $this->requestContext->getCurrentUser();
-        if ($Customer !== null) {
+        if ($Customer instanceof Customer) {
+            $this->customerTwoFactorAuthService->clear2AuthCookies($logoutEvent->getRequest(), $logoutEvent->getResponse());
             $this->twoFactorAuthCustomerCookieRepository->deleteByCustomer($Customer);
         }
     }
