@@ -13,6 +13,7 @@
 
 namespace Plugin\TwoFactorAuthCustomer42\Controller;
 
+use Eccube\Common\Constant;
 use Eccube\Controller\AbstractController;
 use Eccube\Entity\Customer;
 use Eccube\Repository\CustomerRepository;
@@ -237,10 +238,16 @@ class CustomerPersonalValidationController extends AbstractController
         $now = new \DateTime();
 
         // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
-        if (
+        if (version_compare(Constant::VERSION, '4.3', '>=') &&
             !$this->customerTwoFactorAuthService->veriyOneTimeToken($Customer->getDeviceAuthOneTimeToken(), $token) ||
             $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
             return false;
+        } else {
+            if (
+                $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->hashOneTimeToken($token) ||
+                $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
+                return false;
+            }
         }
 
         return true;
