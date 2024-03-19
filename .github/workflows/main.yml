@@ -21,9 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        eccube_version: [ '4.2','4.3' ]
         php: [ '7.4', '8.0', '8.1','8.2', '8.3' ]
         db: [ 'mysql', 'mysql8', 'pgsql' ]
-        eccube_version: [ '4.2','4.3' ]
         plugin_code: [ 'TwoFactorAuthCustomer42' ]
         include:
           - db: mysql
@@ -93,6 +93,15 @@ jobs:
           PLUGIN_CODE: ${{ matrix.plugin_code }}
         run: |
           tar cvzf ${GITHUB_WORKSPACE}/${PLUGIN_CODE}.tar.gz ./*
+
+      - name: Setup mock-package-api
+        env:
+          PLUGIN_CODE: ${{ matrix.plugin_code }}
+        run: |
+          mkdir -p /tmp/repos
+          cp ${GITHUB_WORKSPACE}/${PLUGIN_CODE}.tar.gz /tmp/repos/${PLUGIN_CODE}.tgz
+          docker run --name package-api -d -v /tmp/repos:/repos -e MOCK_REPO_DIR=/repos -p 8080:8080 eccube/mock-package-api:composer2
+
       - name: Checkout EC-CUBE
         uses: actions/checkout@v2
         with:
@@ -121,6 +130,7 @@ jobs:
           DATABASE_URL: ${{ matrix.database_url }}
           DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
           DATABASE_CHARSET: ${{ matrix.database_charset }}
+          ECCUBE_PACKAGE_API_URL: 'http://127.0.0.1:8080'
         working-directory: 'ec-cube'
         run: |
           bin/console doctrine:database:create
@@ -134,9 +144,10 @@ jobs:
           DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
           DATABASE_CHARSET: ${{ matrix.database_charset }}
           PLUGIN_CODE: ${{ matrix.plugin_code }}
+          ECCUBE_PACKAGE_API_URL: 'http://127.0.0.1:8080'
         working-directory: 'ec-cube'
         run: |
-          bin/console eccube:plugin:install --code=${PLUGIN_CODE} --path=${GITHUB_WORKSPACE}/${PLUGIN_CODE}.tar.gz
+          bin/console eccube:composer:require ec-cube/twofactorauthcustomer42
           bin/console cache:clear --no-warmup
           bin/console eccube:plugin:enable --code=${PLUGIN_CODE}
       - name: Disable Plugin
@@ -148,6 +159,7 @@ jobs:
           DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
           DATABASE_CHARSET: ${{ matrix.database_charset }}
           PLUGIN_CODE: ${{ matrix.plugin_code }}
+          ECCUBE_PACKAGE_API_URL: 'http://127.0.0.1:8080'
         run: bin/console eccube:plugin:disable --code=${PLUGIN_CODE}
 
       - name: Uninstall Plugin
@@ -158,5 +170,6 @@ jobs:
           DATABASE_SERVER_VERSION: ${{ matrix.database_server_version }}
           DATABASE_CHARSET: ${{ matrix.database_charset }}
           PLUGIN_CODE: ${{ matrix.plugin_code }}
+          ECCUBE_PACKAGE_API_URL: 'http://127.0.0.1:8080'
         working-directory: 'ec-cube'
         run: bin/console eccube:plugin:uninstall --code=${PLUGIN_CODE}
