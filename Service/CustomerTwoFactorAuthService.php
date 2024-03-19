@@ -428,6 +428,11 @@ class CustomerTwoFactorAuthService
         return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
     }
 
+    public function veriyOneTimeToken(string $hashedToken, string $token): bool
+    {
+        return $this->hashFactory->getPasswordHasher(Customer::class)->verify($hashedToken, $token);
+    }
+
     /***
      * @param string $haystack
      * @param string $needle
