@@ -21,7 +21,7 @@ use Eccube\Repository\BaseInfoRepository;
 use Plugin\TwoFactorAuthCustomer42\Entity\TwoFactorAuthCustomerCookie;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthConfigRepository;
 use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthCustomerCookieRepository;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,7 +45,7 @@ class CustomerTwoFactorAuthService
     public const SESSION_CALL_BACK_URL = 'plugin_eccube_customer_2fa_call_back_url';
 
     /**
-     * @var ContainerInterface
+     * @var ContainerBagInterface
      */
     protected $container;
     /**
@@ -176,7 +176,7 @@ class CustomerTwoFactorAuthService
     /**
      * @required
      */
-    public function setContainer(ContainerInterface $container): ?ContainerInterface
+    public function setContainer(ContainerBagInterface $container): ?ContainerBagInterface
     {
         $previous = $this->container;
         $this->container = $container;
@@ -426,6 +426,11 @@ class CustomerTwoFactorAuthService
     {
         // ハッシュジェネレーターをエンティティに持って来る
         return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
+    }
+
+    public function veriyOneTimeToken(string $hashedToken, string $token): bool
+    {
+        return $this->hashFactory->getPasswordHasher(Customer::class)->verify($hashedToken, $token);
     }
 
     /***

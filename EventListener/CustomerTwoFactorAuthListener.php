@@ -24,8 +24,7 @@ use Plugin\TwoFactorAuthCustomer42\Repository\TwoFactorAuthCustomerCookieReposit
 use Plugin\TwoFactorAuthCustomer42\Service\CustomerTwoFactorAuthService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -83,7 +82,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
      * @param TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository
      * @param TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository
      * @param BaseInfoRepository $baseInfoRepository
-     * @param SessionInterface $session
+     * @param RequestStack $requestStack
      */
     public function __construct(
         Context $requestContext,
@@ -92,7 +91,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         TwoFactorAuthTypeRepository $twoFactorAuthTypeRepository,
         TwoFactorAuthCustomerCookieRepository $twoFactorAuthCustomerCookieRepository,
         BaseInfoRepository $baseInfoRepository,
-        SessionInterface $session
+        RequestStack $requestStack
     ) {
         $this->requestContext = $requestContext;
         $this->router = $router;
@@ -100,7 +99,7 @@ class CustomerTwoFactorAuthListener implements EventSubscriberInterface
         $this->baseInfo = $baseInfoRepository->find(1);
         $this->twoFactorAuthTypeRepository = $twoFactorAuthTypeRepository;
         $this->twoFactorAuthCustomerCookieRepository = $twoFactorAuthCustomerCookieRepository;
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
 
         $this->default_routes = $this->customerTwoFactorAuthService->getDefaultAuthRoutes();
         $this->include_routes = $this->customerTwoFactorAuthService->getIncludeRoutes();
