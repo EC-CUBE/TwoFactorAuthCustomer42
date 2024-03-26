@@ -428,9 +428,15 @@ class CustomerTwoFactorAuthService
         return $this->hashFactory->getPasswordHasher(Customer::class)->hash($token);
     }
 
-    public function veriyOneTimeToken(string $hashedToken, string $token): bool
+    public function verifyOneTimeToken(string $hashedToken, string $token): bool
     {
-        return $this->hashFactory->getPasswordHasher(Customer::class)->verify($hashedToken, $token);
+         if ($this->hashFactory->getPasswordHasher(Customer::class)->verify($hashedToken, $token)) {
+             return true;
+         } elseif ($hashedToken === $this->hashOneTimeToken($token)) {
+             return true;
+         } else {
+             return false;
+         }
     }
 
     /***

@@ -237,20 +237,11 @@ class CustomerPersonalValidationController extends AbstractController
     {
         $now = new \DateTime();
 
-        // フォームからのハッシュしたワンタイムパスワードとDBに保存しているワンタイムパスワードのハッシュは一致しているかどうか
-        if (version_compare(Constant::VERSION, '4.3', '>=') &&
-            !$this->customerTwoFactorAuthService->veriyOneTimeToken($Customer->getDeviceAuthOneTimeToken(), $token) ||
-            $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
-            return false;
-        } else {
-            if (
-                $Customer->getDeviceAuthOneTimeToken() !== $this->customerTwoFactorAuthService->hashOneTimeToken($token) ||
-                $Customer->getDeviceAuthOneTimeTokenExpire() < $now) {
-                return false;
-            }
-        }
+        $hashedToken = $Customer->getDeviceAuthOneTimeToken();
+        $expire = $Customer->getDeviceAuthOneTimeTokenExpire();
 
-        return true;
+        // トークン検証
+        return $this->customerTwoFactorAuthService->verifyOneTimeToken($hashedToken, $token) && $expire > $now;
     }
 
     /**
